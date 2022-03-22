@@ -1,0 +1,759 @@
+openapi: 3.0.0
+info:
+  description: This is an API for managing the pet image website
+  version: '1.0'
+  title: Pets API
+  contact:
+    email: tshort1@unb.ca
+    name: Logan, Taylor & Thomas
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+ - name: admin  
+   description: Secured admin commands
+ - name: developer
+   description: Developer commands and utility
+ - name: users
+   description: Utility for ordinary authenticated users
+servers:
+  - url: '{protocol}://{base}.cs.unb.ca:{port}'
+    variables:
+      protocol:
+        enum:
+          - http
+          - https
+        default: https
+      port:
+        enum:
+          - '43705'
+          - '43075'
+        default: '43075'
+      base:
+        enum:
+          - cs3103
+          - info3103
+        default: cs3103
+paths: 
+  /home:
+    get:
+      tags:
+        - users
+      summary: shows posts from all users
+      operationId: getPosts
+      description: |
+          Displays all posts with images
+      responses:
+        '200':
+          description: returning posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/post'
+  /signin:
+    get:
+      tags:
+        - users
+      summary: retrieves session from database
+      operationId: checkSession
+      description: |
+          Checks for a session for a user and returns the session if true
+      parameters:
+      - in: query
+        name: userid
+        description: species user to sign in
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read
+      responses:
+        '200':
+          description: returning session
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/session'
+        '400':
+          description: session not found
+    post:
+      tags:
+        - users
+      summary: creates a session
+      operationId: createSession
+      description: |
+        Creates a new session for a user
+      parameters:
+      - in: query
+        name: userid
+        description: species user to sign in
+        required: true
+        schema: 
+          type: string
+      security:
+      - OAuth2:
+          - write
+      requestBody:
+        content:
+          application/json:
+             schema:
+              $ref: '#/components/schemas/session'
+        description: Session to create
+      responses:
+        '201':
+          description: Creating session
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/session'
+        '400':
+          description: session not found
+  /signin/{sessionid}:
+    delete:
+      tags:
+        - users
+        - developer
+      summary: removes an active session
+      operationId: deletesession
+      description: Removes an active session
+      parameters:
+      - in: path
+        name: sessionid
+        required: true
+        schema:
+          type: integer
+      security:
+      - OAuth2:
+          - delete
+      responses:
+        '200':
+          description: pet found and removed
+        '400':
+          description: could not find pet
+  /users:
+    post:
+      tags:
+        - admin
+        - developer
+      summary: create a user account
+      description: Create a new user in the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+              properties:
+                idUser:
+                  type: integer
+                UserName:
+                  type: string
+      security:
+        - OAuth2:
+            - admin
+      responses:
+        '201':
+          description: Successfully added a user
+          content:
+            text/plain; charset=utf-8:
+              examples:
+                Example:
+                  value: Successfully added user
+        '400':
+          description: Failed to create user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /users/{userid}:
+    get:
+      tags:
+      - developer
+      summary: retrieves user account
+      operationId: getAccount
+      description: |
+          Retrieves a user
+      parameters:
+      - in: path
+        name: userid
+        description: species user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - developer
+      responses:
+        '200':
+          description: returning user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/user'
+        '400':
+          description: user not found    
+    delete:
+      tags:
+      - admin
+      summary: remove a user account
+      description: deletes a user account
+      parameters:
+        - in: path
+          name: userid
+          required: true
+          schema:
+            type: integer
+      security:
+        - OAuth2:
+            - admin
+      responses:
+        '204':
+          description: Successfully deleted a user account
+        '404':
+          description: User account not found
+  /users/{userid}/pets:
+    get:
+      tags:
+        - users
+      summary: list of all user's pets
+      operationId: getPets
+      description: retrieves list of pets
+      parameters:
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read
+      responses:
+        '200':
+          description: returned list of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/pet'
+        '400':
+          description: could not find pets
+    post:
+      tags:
+          - users
+      summary: creates a new pet account
+      operationId: createPet
+      description: creates a pet record
+      parameters:
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - write
+      responses:
+        '201':
+          description: pet created
+        '400':
+          description: pet could not be created, invalid input
+        '409':
+          description: a pet with this info already exists
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/pet'
+        description: School to add
+  /users/{userid}/pets/{petid}:
+    get:
+      tags:
+      - users
+      summary: shows account information for a specific pet account
+      operationId: getPetById
+      description: retrieves pet information for a specified pet id
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read
+      responses:
+        '200':
+          description: found and returned pet account info
+          content:
+            application/json:
+              schema:
+                type: object
+                items:
+                  $ref: '#/components/schemas/pet'
+        '400':
+          description: pet not found
+    put:
+      tags:
+        - users
+      summary: updates account information
+      operationId: updatePet
+      description: update pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - write
+      responses:
+        '200':
+          description: pet found and updated
+        '400':
+            description: could not find pet
+    delete:
+      tags:
+        - users
+      summary: deletes account of specified pet
+      operationId: deletePet
+      description: delete pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: integer
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - delete
+      responses:
+        '200':
+          description: pet found and removed
+        '400':
+          description: could not find pet
+  /users/{userid}/pets/{petid}/posts:
+    get:
+      tags:
+        - users
+      summary: shows posts from a specific pet account
+      operationId: getPostsByPet
+      description: retrieves posts for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read      
+      responses:
+        '200':
+          description: found and returned pet posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/post'
+        '400':
+            description: pet not found
+    post:
+      tags:
+        - users
+      summary: creates new pet post
+      operationId: createPost
+      description: creates a post for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read
+      responses:
+        '201':
+          description: post created
+        '404':
+          description: pet not found
+        '409':
+          description: this post already exists
+  /users/{userid}/pets/{petid}/posts/{postid}:
+    get:
+      tags:
+        - users
+      summary: shows posts from a specific pet account, can specify a specific post
+      operationId: getPostInfo
+      description: retrieves posts for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      - in: path
+        name: postid
+        description: specifies post
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read      
+      responses:
+        '200':
+          description: found and returned pet posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/post'
+        '400':
+            description: pet not found
+    delete:
+      tags:
+        - users
+      summary: deletes a pet post
+      operationId: deletePost
+      description: deletes a pet's post
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      - in: path
+        name: postid
+        description: specifies post
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - write
+      responses:
+        '200':
+          description: post found and removed
+        '400':
+          description: post could not be found
+    put:
+      tags:
+        - users
+      summary: edit a pet's post
+      operationId: updatePost
+      description: updates a pet's post
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      - in: path
+        name: postid
+        description: specifies post
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - write
+      responses:
+        '200':
+          description: post updated
+        '400':
+          description: post could not be found
+  /users/{userid}/pets/{petid}/images:
+    get:
+      tags:
+        - users
+      summary: shows images from a specific pet account
+      operationId: getPetImages
+      description: retrieves images for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read      
+      responses:
+        '200':
+          description: found and returned pet images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/post'
+        '400':
+            description: pet not found
+    post:
+      tags:
+        - users
+      summary: upload new pet image
+      operationId: createImage
+      description: creates an image for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read
+      responses:
+        '201':
+          description: post created
+        '404':
+          description: pet not found
+        '409':
+          description: this post already exists
+  /users/{userid}/pets/{petid}/images/{imageid}:
+    get:
+      tags:
+        - users
+      summary: shows specified image
+      operationId: getImage
+      description: retrieves posts for a pet
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      - in: path
+        name: imageid
+        description: specifies image id
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - read      
+      responses:
+        '200':
+          description: found and returned pet image
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/image'
+        '400':
+            description: pet not found
+    delete:
+      tags:
+        - users
+      summary: deletes a pet image
+      operationId: deleteImage
+      description: deletes a pet's image
+      parameters:
+      - in: path
+        name: petid
+        required: true
+        schema:
+          type: string
+      - in: path
+        name: userid
+        description: specifies user
+        required: true
+        schema: 
+          type: string
+      - in: path
+        name: imageid
+        description: specifies post
+        required: true
+        schema: 
+          type: string
+      security:
+        - OAuth2:
+            - write
+      responses:
+        '200':
+          description: post found and removed
+        '400':
+          description: post could not be found
+components:
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: http://cs3103.cs.unb.ca:43075/signin
+          tokenUrl: /oath/token
+          scopes:
+            read: Grants read access
+            write: Grants write access
+            delete: Grants delete access
+            admin: Grants access to admin operation
+            developer: Grants access to dev utility
+  schemas:
+    user:
+      type: object
+      required:
+        - username
+      properties:
+        userid:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: 'Taylor05'
+    session:
+      type: object
+      required:
+        - userid
+        - cookie
+      properties:
+        userid:
+          type: integer
+          example: 1
+        cookie:
+          type: string
+          example: 'sxj2udsfkp2'
+    pet:
+      type: object
+      required:
+        - name
+        - species
+        - age
+      properties:
+        petid:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: 'Mr Biggles'
+        species:
+          type: string
+          example: 'dog'
+        breed:
+          type: string
+          example: 'Poodle'
+        age:
+          type: integer
+          example: 
+    post:
+      type: object
+      required:
+        - image
+        - caption
+      properties:
+        postid:
+          type: integer
+          example: 1
+        image:
+          type: integer
+          example: 1
+        caption:
+          type: string
+          example: 'Love our pet for life.'
+    image:
+      type: object
+      required:
+        - extension
+        - filename
+      properties:
+        imageid:
+          type: integer
+          example: 1
+        extension:
+          type: string
+          example: 'jpg'
+        filename:
+          type: string
+          example: 'mypet'
+        path:
+          type: string
+          example: '/home/folder1'
