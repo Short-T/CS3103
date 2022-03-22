@@ -1,0 +1,6 @@
+DROP TABLE IF EXISTS users;
+CREATE TABLE sessions (
+  UserId INT NOT NULL AUTO_INCREMENT,
+  UserName VarChar(50),
+  PRIMARY KEY (UserId)
+);

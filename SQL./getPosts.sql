@@ -1,0 +1,9 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS getPosts //
+
+CREATE PROCEDURE getPosts()
+BEGIN
+  SELECT *
+    FROM posts;
+END //
+DELIMITER ;

@@ -1,0 +1,9 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS getImages //
+
+CREATE PROCEDURE getImages()
+BEGIN
+  SELECT *
+    FROM images;
+END //
+DELIMITER ;
