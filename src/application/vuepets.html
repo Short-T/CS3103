@@ -126,7 +126,10 @@ Vue.component('Post-List', {
         var vm = new Vue({
             el: '#app',
             data: {
-                LoggedIn: false
+                LoggedIn: {
+                    type: Boolean
+                },
+                status: ''
             },
             template: `
                 <div class="container-fluid">
@@ -223,6 +226,24 @@ Vue.component('Post-List', {
                         }
                         else {
                             this.LoggedIn = false;
+                        }
+                    },
+                    /* Axios will connect the backend
+                    from my understanding
+                    LoadPage: function() {
+                        this.status = 'Loading...';
+                        var vm = this;
+                        axios.get()
+                    }
+                    */
+                   mounted() {
+                        if(localStorage.LoggedIn) {
+                            SignIn();
+                        }
+                    },
+                    watch: {
+                        LoggedIn(logged) {
+                            localStorage.name = logged;
                         }
                     }
         }
