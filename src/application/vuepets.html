@@ -45,25 +45,11 @@
             </div>
             `
         });
-        var vm = new Vue({
-            el: '#app',
-            data: {
-                message: 'hi'
-            },
-            template: `
-                <div class="container-fluid">
-                    <div class="absolute">
-                        <div class="row bg-light p-2 m-2">
-                            <div class="col-4"></div>
-                            <div class="col-4">
-                                <h1> Pets </h1>
-                            </div>
-                            <div class="col-4"></div>
-    
-                        </div>
-                        <!--The main Body of the page-->
-                        <HomeBar></HomeBar>
-                        <div class="relative">
+        Vue.component('UserHome', {
+            template: 
+            `
+                <div class="relative">
+                    <HomeBar></HomeBar>
                             <div class="row bg-light text-dark m-2">
                                 <div class="col-4">
                                     <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userProfile" aria-expanded="false" aria-controls="userProfile">
@@ -100,8 +86,85 @@
                                     <p>Pet Bio will go here</p>
                                 </div>
                             </div>
+                        `
+
+        })
+        Vue.component('LogInScreen', {
+
+            template: `
+            <div>
+                <div class="relative">
+            <div class="row bg-dark text-white m-2">
+                <nav class="nav nav-tabs">
+
+                    <div class="col-4 m-1">
+                    </div>
+                    <div class="col-5 m-1">
+                        <h1>
+                            Login
+                        </h1>
+                    </div>
+                    <div class="col-2 text-dark text-center">
+                    </div>
+                </nav>
+            </div>
+
+        </div>
+    <div class="form-group">
+        <div class="row m-2 p-2">
+            <div class="col-3 m-0 b-0 p-0">
+                <label for="UserName">UserName</label>
+
+            </div>
+            <div class="col-8 b-0 m-0 p-0">
+                <input type="email" class="form-control" id="UserName" aria-describedby="emailHelp" placeholder="Enter Username">
+            </div>
+
+        </div>
+    </div>
+    <div class="form-group ">
+        <div class="row m-2 p-2">
+            <div class="col-3 m-0 b-0 p-0">
+                <label for="Password">Password</label>
+
+            </div>
+            <div class="col-8 b-0 m-0 p-0">
+                <input type="password" class="form-control " id="Password" placeholder="Password ">
+            </div>
+
+        </div>
+    </div>
+    
+
+    </div>
+            `
+        })
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                LoggedIn: false
+            },
+            template: `
+                <div class="container-fluid">
+                    <div class="absolute">
+                        <div class="row bg-light p-2 m-2">
+                            <div class="col-4"></div>
+                            <div class="col-4">
+                                <h1> Pets </h1>
+                            </div>
+                            <div class="col-4"></div>
     
                         </div>
+                        <!--The main Body of the page-->
+                        <span v-if="LoggedIn"> <userHome></userHome> </span>
+                        <span v-else> <LogInScreen></LogInScreen> <br>
+                            <div class="row ">
+                                <div class="col-1 "></div>
+                                <div class="col-4 ">
+                                    <button type="submit" class="btn btn-primary" v-on:click="SignIn">Submit</button>
+                                </div>
+
+                            </div></span>
                         <div class="footer text-center">
                             <h1>Contact</h1>
                             ldavids2@unb.ca
@@ -111,8 +174,14 @@
                         </div>
                     </div>
                 </div>
-                `
+                `,
+                methods: {
+                    SignIn: function() {
+                        this.LoggedIn = true
+                    }
+        }
         });
+        
     </script>
 </body>
 
