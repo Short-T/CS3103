@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
+    <title> Pet App </title>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device, initial-scale=1">
-    <title> Pets </title>
-    <!-- Bootstrap CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -13,16 +12,88 @@
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row bg-light p-2 m-2">
-            <div class="col-4"></div>
-            <div class="col-4">
-                <h1> Pets </h1>
-            </div>
-            <div class="col-4"></div>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <div id="app">
+    </div>
+    <script>
+        Vue.component('Menut', {
+            template: '<div class="col-2 text-dark"><button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-expanded="false" aria-controls="userPets"><h2><i class="bi-menu"></i> Menu</h2></button><div class="collapse" id="menu"><div class="card card-body"><h2> Logout</h2><h2>Info</h2><h2>Pets</h2><h2>Posts</h2></div> </div></div>'
 
-        </div>
-        <div class="relative">
+        });
+        Vue.component('HomeBar', {
+            template: `
+            <div class="relative">
+                <div class="row bg-dark text-white m-2">
+                    <nav class="nav nav-tabs">
+
+                        <div class="col-2 m-1">
+
+                            <a href="#" class="nav-item nav-link">
+                                <h2><i class="bi-house-door"></i> Home</h2>
+                            </a>
+                        </div>
+                        <div class="col-4 m-1">
+                            <a href="#" class="nav-item nav-link">
+                                <h2><i class="bi-person"></i> Profile</h2>
+                            </a>
+                        </div>
+                        <div class="col-3"></div>
+                        <Menut></Menut>
+                    </nav>
+                </div>
+
+            </div>
+            `
+        });
+        Vue.component('UserHome', {
+            template: 
+            `
+                <div class="relative">
+                    <HomeBar></HomeBar>
+                            <div class="row bg-light text-dark m-2">
+                                <div class="col-4">
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userProfile" aria-expanded="false" aria-controls="userProfile">
+                            User Profile
+                          </button>
+                                    <div class="collapse p-2" id="userProfile">
+                                        <div class="card card-body">
+                                            <h2><i class="bi-search"></i> Search</h2>
+                                            <h2><i class="bi-plus-square"></i> Post </h2>
+                                        </div>
+                                    </div>
+                                    <div class="row m-2"></div>
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userPets" aria-expanded="false" aria-controls="userPets">
+                        Your Pets
+                      </button>
+                                    <div class="collapse p-2" id="userPets">
+                                        <div class="card card-body">
+                                            <h2>
+                                                <i class="bi-square"></i> Show
+                                            </h2>
+                                            <h2>
+                                                <i class="bi-plus-square "></i> Add
+                                            </h2>
+                                            <h2>
+                                                <i class="bi-dash-square"></i> Remove
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4 ">
+                                    <p>Image feed will be here</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>Pet Bio will go here</p>
+                                </div>
+                            </div>
+                        `
+
+        })
+        Vue.component('LogInScreen', {
+            template: `
+            
+            <div>
+                <div class="relative">
             <div class="row bg-dark text-white m-2">
                 <nav class="nav nav-tabs">
 
@@ -39,8 +110,6 @@
             </div>
 
         </div>
-    </div>
-
     <div class="form-group">
         <div class="row m-2 p-2">
             <div class="col-3 m-0 b-0 p-0">
@@ -74,19 +143,40 @@
 
     </div>
 
-    </form>
-
     </div>
-    <form>
-
-
-        <div class="footer text-center ">
-            <h1>Contact</h1>
-            ldavids2@unb.ca
-            <br> tshort@unb.ca
-            <br> thomas email
-            <br> Copyright 2022
-        </div>
+            `
+        })
+        var vm = new Vue({
+            el: '#app',
+            data: {
+                LoggedIn: false
+            },
+            template: `
+                <div class="container-fluid">
+                    <div class="absolute">
+                        <div class="row bg-light p-2 m-2">
+                            <div class="col-4"></div>
+                            <div class="col-4">
+                                <h1> Pets </h1>
+                            </div>
+                            <div class="col-4"></div>
+    
+                        </div>
+                        <!--The main Body of the page-->
+                        <span v-if="LoggedIn"> <userHome></userHome> </span>
+                        <span v-else> <LogInScreen></LogInScreen> </span>
+                        <div class="footer text-center">
+                            <h1>Contact</h1>
+                            ldavids2@unb.ca
+                            <br> tshort@unb.ca
+                            <br> thomas email
+                            <br> Copyright 2022
+                        </div>
+                    </div>
+                </div>
+                `
+        });
+    </script>
 </body>
 
 </html>
