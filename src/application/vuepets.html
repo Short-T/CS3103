@@ -9,6 +9,15 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        div.collapse:hover {
+            background-color: #eeeeee;
+            cursor: pointer;
+        }
+        div.card h2:hover{
+            background-color: #dedede;
+        }
+    </style>
 </head>
 
 <body>
@@ -16,79 +25,6 @@
     <div id="app">
     </div>
     <script>
-        Vue.component('Menut', {
-            template: '<div class="col-2 text-dark"><button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-expanded="false" aria-controls="userPets"><h2><i class="bi-menu"></i> Menu</h2></button><div class="collapse" id="menu"><div class="card card-body"><h2> Logout</h2><h2>Info</h2><h2>Pets</h2><h2>Posts</h2></div> </div></div>'
-
-        });
-        Vue.component('HomeBar', {
-            template: `
-            <div class="relative">
-                <div class="row bg-dark text-white m-2">
-                    <nav class="nav nav-tabs">
-
-                        <div class="col-2 m-1">
-
-                            <a href="#" class="nav-item nav-link">
-                                <h2><i class="bi-house-door"></i> Home</h2>
-                            </a>
-                        </div>
-                        <div class="col-4 m-1">
-                            <a href="#" class="nav-item nav-link">
-                                <h2><i class="bi-person"></i> Profile</h2>
-                            </a>
-                        </div>
-                        <div class="col-3"></div>
-                        <Menut></Menut>
-                    </nav>
-                </div>
-
-            </div>
-            `
-        });
-        Vue.component('UserHome', {
-            template: 
-            `
-                <div class="relative">
-                    <HomeBar></HomeBar>
-                            <div class="row bg-light text-dark m-2">
-                                <div class="col-4">
-                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userProfile" aria-expanded="false" aria-controls="userProfile">
-                            User Profile
-                          </button>
-                                    <div class="collapse p-2" id="userProfile">
-                                        <div class="card card-body">
-                                            <h2><i class="bi-search"></i> Search</h2>
-                                            <h2><i class="bi-plus-square"></i> Post </h2>
-                                        </div>
-                                    </div>
-                                    <div class="row m-2"></div>
-                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userPets" aria-expanded="false" aria-controls="userPets">
-                        Your Pets
-                      </button>
-                                    <div class="collapse p-2" id="userPets">
-                                        <div class="card card-body">
-                                            <h2>
-                                                <i class="bi-square"></i> Show
-                                            </h2>
-                                            <h2>
-                                                <i class="bi-plus-square "></i> Add
-                                            </h2>
-                                            <h2>
-                                                <i class="bi-dash-square"></i> Remove
-                                            </h2>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-4 ">
-                                    <p>Image feed will be here</p>
-                                </div>
-                                <div class="col-4">
-                                    <p>Pet Bio will go here</p>
-                                </div>
-                            </div>
-                        `
-
-        })
         Vue.component('LogInScreen', {
 
             template: `
@@ -156,7 +92,64 @@
     
                         </div>
                         <!--The main Body of the page-->
-                        <span v-if="LoggedIn"> <userHome></userHome> </span>
+                        <span v-if="LoggedIn"> 
+                    <div class="relative">
+                <div class="row bg-dark text-white m-2">
+                    <nav class="nav nav-tabs">
+
+                        <div class="col-2 m-1">
+
+                            <a href="#" class="nav-item nav-link">
+                                <h2><i class="bi-house-door"></i> Home</h2>
+                            </a>
+                        </div>
+                        <div class="col-4 m-1">
+                            <a href="#" class="nav-item nav-link">
+                                <h2><i class="bi-person"></i> Profile</h2>
+                            </a>
+                        </div>
+                        <div class="col-3"></div>
+                        <div class="col-2 text-dark"><button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-expanded="false" aria-controls="userPets"><h2><i class="bi-menu"></i> Menu</h2></button><div class="collapse" id="menu"><div class="card card-body"><h2><span class="lgout" v-on:click="SignIn"> Logout</span></h2><h2>Info</h2><h2>Pets</h2><h2>Posts</h2></div> </div></div>
+                    </nav>
+                </div>
+
+            </div>
+                            <div class="row bg-light text-dark m-2">
+                                <div class="col-4">
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userProfile" aria-expanded="false" aria-controls="userProfile">
+                            User Profile
+                          </button>
+                                    <div class="collapse p-2" id="userProfile">
+                                        <div class="card card-body">
+                                            <h2><i class="bi-search"></i> Search</h2>
+                                            <h2><i class="bi-plus-square"></i> Post </h2>
+                                        </div>
+                                    </div>
+                                    <div class="row m-2"></div>
+                                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#userPets" aria-expanded="false" aria-controls="userPets">
+                        Your Pets
+                      </button>
+                                    <div class="collapse p-2" id="userPets">
+                                        <div class="card card-body">
+                                            <h2>
+                                                <i class="bi-square"></i> Show
+                                            </h2>
+                                            <h2>
+                                                <i class="bi-plus-square "></i> Add
+                                            </h2>
+                                            <h2>
+                                                <i class="bi-dash-square"></i> Remove
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-4 ">
+                                    <p>Image feed will be here</p>
+                                </div>
+                                <div class="col-4">
+                                    <p>Pet Bio will go here</p>
+                                </div>
+                            </div> </span>
                         <span v-else> <LogInScreen></LogInScreen> <br>
                             <div class="row ">
                                 <div class="col-1 "></div>
@@ -168,8 +161,8 @@
                         <div class="footer text-center">
                             <h1>Contact</h1>
                             ldavids2@unb.ca
-                            <br> tshort@unb.ca
-                            <br> thomas email
+                            <br> tshort1@unb.ca
+                            <br> tcampbe6@unb.ca
                             <br> Copyright 2022
                         </div>
                     </div>
@@ -177,7 +170,12 @@
                 `,
                 methods: {
                     SignIn: function() {
-                        this.LoggedIn = true
+                        if(!this.LoggedIn) {
+                            this.LoggedIn = true;
+                        }
+                        else {
+                            this.LoggedIn = false;
+                        }
                     }
         }
         });
