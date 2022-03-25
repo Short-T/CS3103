@@ -53,7 +53,7 @@ api.add_resource(Developer,'/dev')
 class Pets(Resource):
     # GET: Return all Pet Resources
 	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/schools
+	# Example request: curl http://cs3103.cs.unb.ca:43075/pets
 	def get(self):
 		try:
 			dbConnection = pymysql.connect(
@@ -191,7 +191,7 @@ class School(Resource):
 		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
 		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
 
-class Posts(Resource)
+class Posts(Resource):
     # GET: Return identified post
 	#
 	# Example request: curl http://cs3103.cs.unb.ca:43075/pets/PetPet/posts/15
@@ -326,7 +326,7 @@ class Images(Resource):
 
 api = Api(app)
 api.add_resource(Pets, '/pets')
-api.add_resource(Pet, '/pets/<int:petId>')
+#api.add_resource(Pet, '/pets/<int:petId>')
 
 
 #############################################################################
