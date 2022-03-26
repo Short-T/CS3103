@@ -6,5 +6,6 @@ CREATE Table pets (
     PetName VarChar(50) DEFAULT NULL,
     PetAge VarChar(50) DEFAULT NULL,
     UserId INT,
+    PRIMARY KEY(PetId),
     FOREIGN KEY (UserId) REFERENCES users(UserId)
 );

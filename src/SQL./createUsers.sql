@@ -1,5 +1,5 @@
 DROP TABLE IF EXISTS users;
-CREATE TABLE sessions (
+CREATE TABLE users (
   UserId INT NOT NULL AUTO_INCREMENT,
   UserName VarChar(50),
   PRIMARY KEY (UserId)

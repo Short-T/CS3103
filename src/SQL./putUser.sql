@@ -1,0 +1,8 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS putUser //
+CREATE PROCEDURE putUser(IN  userName VARCHAR(55))
+BEGIN   
+    INSERT INTO pets(UserName) VALUE
+        (userName);
+END //
+DELIMITER ;

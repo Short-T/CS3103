@@ -1,0 +1,10 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS getImagesByPet //
+
+CREATE PROCEDURE getImagesByPet(IN id VARCHAR(55))
+BEGIN
+  SELECT *
+    FROM pets
+    WHERE id=PetId;
+END //
+DELIMITER ;
