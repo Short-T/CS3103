@@ -118,11 +118,11 @@ class Pets(Resource):
 		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
 		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
 
-class School(Resource):
+class Pet(Resource):
     # GET: Return identified school resource
 	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/schools/2
-	def get(self, schoolId):
+	# Example request: curl http://cs3103.cs.unb.ca:43075/Pets/2
+	def get(self, PetId):
 		try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
@@ -143,7 +143,7 @@ class School(Resource):
 		finally:
 			cursor.close()
 			dbConnection.close()
-		return make_response(jsonify({"school": row}), 200) # successful
+		return make_response(jsonify({"pet": row}), 200) # successful
 
     # DELETE: Delete identified school resource
     #
