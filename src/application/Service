@@ -51,10 +51,10 @@ api.add_resource(Developer,'/dev')
 # pets routing: GET and POST, individual pet access
 #
 class Pets(Resource):
-	# GET: Return all Pet Resources
+    # GET: Return all Pet Resources
 	#
 	# Example request: curl -i -H "Content-Type: application/json" -X GET
-	# -b cookie-jar -k https://cs3103.cs.unb.ca:43075/pets
+	# -b cookie-jar -k http://cs3103.cs.unb.ca:43075/pets
 	def get(self):
 		try:
 			dbConnection = pymysql.connect(
@@ -76,12 +76,20 @@ class Pets(Resource):
 		return make_response(jsonify({'pets': rows}), 200) # turn set into json and return it
 
 	def post(self):
-		#
-		# Sample command line usage:
-		#
-		# curl -i -X POST -H "Content-Type: application/json"
-		#    -d '{"PetSpecies": "Hedgehog", "PetBreed": "Domestic", "PetName": "Hedgewig", "PetAge": "5"}'
-		#         http://cs3103.cs.unb.ca:43075/pets
+        #
+        # Sample command line usage:
+        #
+        # curl -i -X POST -H "Content-Type: application/json"
+        #    -d '{"PetSpecies": "Hedgehog", "PetBreed": "Domestic", "PetName": "Hedgewig", "PetAge": "5"}'
+        #         http://cs3103.cs.unb.ca:43075/pets
+
+		dbConnection = pymysql.connect(settings.DB_HOST,
+			settings.DB_USER,
+			settings.DB_PASSWD,
+			settings.DB_DATABASE,
+			charset='utf8mb4',
+			cursorclass= pymysql.cursors.DictCursor)
+		sql = "putPet"
 
 		if not request.json or not 'PetName' in request.json:
 			abort(400) # bad request
@@ -94,28 +102,23 @@ class Pets(Resource):
 		petAge = request.json['PetAge']
 
 		try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'putPet'
 			cursor = dbConnection.cursor()
 			sqlArgs = (petSpecies,petBreed,petName,petAge) # Must be a collection
 			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
-			row = cursor.fetchone()
 			dbConnection.commit() # database was modified, commit the changes
+			row = cursor.fetchall()
+			lastinsert = cursor.lastrowid
 		except:
 			abort(500) # Nondescript server error
 		finally:
 			cursor.close()
 			dbConnection.close()
+		
 		# Look closely, Grasshopper: we just created a new resource, so we're
 		# returning the uri to it, based on the return value from the stored procedure.
 		# Yes, now would be a good time check out the procedure.
 		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
-		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
+		uri = uri+str(request.url_rule)+'/'+str(lastinsert)
 		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
 
 class Pet(Resource):
