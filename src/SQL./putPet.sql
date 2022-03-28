@@ -10,7 +10,6 @@ BEGIN
         SET MESSAGE_TEXT = 'Unable to create the pet';
     END IF;
 
-    / If the INSERT is successful, then this will return the Id for the record /
-    SELECT LAST_INSERT_ID(); / Specific to this session */
+    SELECT LAST_INSERT_ID();
 END //
 DELIMITER ;
