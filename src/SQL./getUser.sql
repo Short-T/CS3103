@@ -1,10 +1,10 @@
 DELIMITER //
 DROP PROCEDURE IF EXISTS getUser //
 
-CREATE PROCEDURE getUser(IN user VARCHAR(55))
+CREATE PROCEDURE getUser(IN user INT)
 BEGIN
     SELECT *
         FROM schools
-            WHERE UserName = user;
+            WHERE UserId = user;
 END //
 DELIMITER ;
