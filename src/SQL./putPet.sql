@@ -1,9 +1,9 @@
 DELIMITER //
 DROP PROCEDURE IF EXISTS putPet //
-CREATE PROCEDURE putPet(IN species VARCHAR(55), IN breed VARCHAR(50), IN pName VARCHAR(50), IN age INT)
+CREATE PROCEDURE putPet(IN species VARCHAR(55), IN breed VARCHAR(50), IN pName VARCHAR(50), IN age INT, IN owner INT)
 BEGIN   
-    INSERT INTO pets(PetSpecies, PetBreed, PetName, PetAge) VALUE
-        (species, breed, pName, age);
+    INSERT INTO pets(PetSpecies, PetBreed, PetName, PetAge, UserId) VALUE
+        (species, breed, pName, age, owner);
     
     IF(ROW_COUNT() = 0) THEN
       SIGNAL SQLSTATE '52712'
