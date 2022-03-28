@@ -4,5 +4,10 @@ CREATE PROCEDURE putUser(IN  userName VARCHAR(55))
 BEGIN   
     INSERT INTO pets(UserName) VALUE
         (userName);
+    IF(ROW_COUNT()=0) THEN
+        SIGNAL SQLSTATE '52700'
+        SET MESSAGE_TEXT = 'Unable to create the user';
+    END IF;
+    SELECT LAST_INSERT_ID();
 END //
 DELIMITER ;
