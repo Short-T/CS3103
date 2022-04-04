@@ -1,0 +1,25 @@
+#!/bin/bash
+# Read username and password
+read -r -p "username: " username
+read -r -s -p "password: " password
+
+# substitute into the curl command
+curl -i -H "Content-Type: application/json" \
+   -X POST -d '{"username": "'$username'", "password": "'$password'"}' \
+   -c cookie-jar -k https://cs3103.cs.unb.ca:43075/signin
+
+curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users
+
+curl -i -X POST -H "Content-Type: application/json" -d '{"Username": "tcampbe6"}' -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users
+
+curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users/2
+
+curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users/2/pets
+
+curl -i -X POST -H "Content-Type: application/json" -d '{"PetSpecies": "Hedgehog", "PetBreed": "Domestic", "PetName": "Hedgewig", "PetAge": "5", "userId": 3}' -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users/3/pets
+
+curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users/2/pets/24
+
+curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar -k https://cs3103.cs.unb.ca:43075/users/2/pets/24
+
+curl -i -H "Content-Type: application/json" -X DELETE -b cookie-jar -k https://cs3103.cs.unb.ca:43075/signin
