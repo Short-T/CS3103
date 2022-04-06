@@ -75,7 +75,7 @@ User Profile
         <div class="collapse p-2" id="userProfile">
             <div class="card card-body">
                 <h2><i class="bi-search"></i> Search</h2>
-                <h2><i class="bi-plus-square"></i> Post </h2>
+                <h2 v-on:click="postView()"><i class="bi-plus-square"></i> Post </h2>
             </div>
         </div>
         <div class="row m-2"></div>
@@ -87,10 +87,10 @@ Your Pets
                 <h2>
                     <i class="bi-square"></i> Show
                 </h2>
-                <h2>
+                <h2 v-on:click="petAddView()">
                     <i class="bi-plus-square "></i> Add
                 </h2>
-                <h2>
+                <h2 v-on:click="petDeleteView()">
                     <i class="bi-dash-square"></i> Remove
                 </h2>
             </div>
@@ -105,13 +105,31 @@ Your Pets
     </div>
 </span>
 </section>
-    `
+    `,
+    methods: {
+        postView() {
+            this.$parent.goPostForm();
+        },
+        petAddView() {
+            this.$parent.goAddPet();
+        },
+        petDeleteView() {
+            this.$parent.goDeletePet();
+        }
+    }
 })
 var vm = new Vue({
     el: `#app`,
     data: {
         serviceURL: "https://cs3103.cs.unb.ca:43075",
         authenticated: false,
+        home: true,
+        profile: false,
+        petList: false,
+        userPosts: false,
+        postForm: false,
+        addPet: false,
+        deletePet: false,
         imagesData: null,
         petsData: null,
         loggedIn: null,
@@ -152,13 +170,13 @@ var vm = new Vue({
              <div class="row bg-dark text-white m-2">
                 <nav class="nav nav-tabs">
                    <div class="col-4 col-lg-2">
-                      <a href="#" class="nav-item nav-link">
+                      <a href="#" class="nav-item nav-link" v-on:click="goHome()">
                          <h2><i class="bi-house-door"></i> Home</h2>
                       </a>
                    </div>
                    <div class="col-1 col-lg-1"></div>
                    <div class="col-4 col-lg-4">
-                      <a href="#" class="nav-item nav-link">
+                      <a href="#" class="nav-item nav-link" v-on:click="goProfile()">
                          <h2><i class="bi-person"></i> Profile</h2>
                       </a>
                    </div>
@@ -173,18 +191,38 @@ var vm = new Vue({
                                Logout
                             </h2>
                             <h2>Info</h2>
-                            <h2>Pets</h2>
-                            <h2>Posts</h2>
+                            <h2 v-on:click="goPetList()">Pets</h2>
+                            <h2 v-on:click="goUserPosts()">Posts</h2>
                          </div>
                       </div>
                    </div>
                 </nav>
              </div>
           </div>
-
-          <div class="row bg-light text-dark m-2">
-             <userHome></userHome>
-          </div>
+          <section v-if="home">
+            <div class="row bg-light text-dark m-2">
+                <userHome></userHome>
+            </div>
+          </section>
+          <section v-if="profile">
+            <h1> Profile will be displayed here </h1>
+          </section>
+          <section v-if="petList">
+            <h1> List of pets will be displayed here </h1>
+            </section>
+            <section v-if="userPosts">
+            <h1> List of user posts will be displayed here </h1>
+            </section>
+            <section v-if="postForm">
+                <h1> Form to post image will be dispalyed here </h1>
+            </section>
+            <section v-if="addPet">
+                <h1> Form to add pet will be displayed here </h1>
+            </section>
+            <section v-if="deletePet">
+                <h1> Form to delete pet will be displayed here </h1>
+            </section>
+          </section>
        </section>
        <section v-if="!authenticated">
              <div class="form-group text-center">
@@ -265,6 +303,69 @@ logout() {
           alert("Unable to load the Image data");
           console.log(e);
         });
+      },
+      goHome() {
+          this.home = true;
+          this.profile = false;
+          this.petList = false;
+          this.userPosts = false;
+          this.postForm = false;
+          this.addPet = false;
+          this.deletePet = false;
+      },
+      goProfile() {
+          this.home = false;
+          this.profile = true;
+          this.petList = false;
+          this.userPosts = false;
+          this.postForm = false;
+          this.addPet = false;
+          this.deletePet = false;
+      },
+      goPetList() {
+        this.home = false;
+        this.profile = false;
+        this.petList = true;
+        this.userPosts = false;
+        this.postForm = false;
+        this.addPet = false;
+        this.deletePet = false;
+      },
+      goUserPosts() {
+        this.home = false;
+        this.profile = false;
+        this.petList = false;
+        this.userPosts = true;
+        this.postForm = false;
+        this.addPet = false;
+        this.deletePet = false;
+      },
+      goPostForm() {
+        this.home = false;
+        this.profile = false;
+        this.petList = false;
+        this.userPosts = false;
+        this.postForm = true;
+        this.addPet = false;
+        this.deletePet = false;
+      },
+      goAddPet() {
+        this.home = false;
+        this.profile = false;
+        this.petList = false;
+        this.userPosts = false;
+        this.postForm = false;
+        this.addPet = true;
+        this.deletePet = false;
+      },
+      goDeletePet() {
+        this.home = false;
+        this.profile = false;
+        this.petList = false;
+        this.userPosts = false;
+        this.postForm = false;
+        this.addPet = false;
+        this.deletePet = true;
       },
       uploadImage(form) {
             axios
