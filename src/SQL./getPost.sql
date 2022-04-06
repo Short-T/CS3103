@@ -5,6 +5,6 @@ CREATE PROCEDURE getPosts(IN id INT)
 BEGIN
   SELECT *
     FROM images
-    WHERE PetId = id;
+    WHERE IdImage = id;
 END //
 DELIMITER ;
