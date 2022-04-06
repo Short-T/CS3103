@@ -4,6 +4,6 @@ DROP PROCEDURE IF EXISTS getPosts //
 CREATE PROCEDURE getPosts()
 BEGIN
   SELECT *
-    FROM posts;
+    FROM images;
 END //
 DELIMITER ;
