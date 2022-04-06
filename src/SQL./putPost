@@ -1,0 +1,15 @@
+DELIMITER //
+DROP PROCEDURE IF EXISTS putPost //
+CREATE PROCEDURE putPost(IN ext VARCHAR(50), IN name VARCHAR(50), IN path VARCHAR(50), IN pet INT, IN title VARCHAR(50), IN desc VARCHAR(255))
+BEGIN   
+    INSERT INTO pets(ImageFileExtension, ImageFileName, ImagePath, PetId, ImageTitle, ImageDescription) VALUE
+        (ext, name, path, pet, title, desc);
+    
+    IF(ROW_COUNT() = 0) THEN
+      SIGNAL SQLSTATE '52712'
+        SET MESSAGE_TEXT = 'Unable to create the post';
+    END IF;
+
+    SELECT LAST_INSERT_ID();
+END //
+DELIMITER ;
