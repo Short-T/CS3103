@@ -112,6 +112,7 @@ var vm = new Vue({
     data: {
         serviceURL: "https://cs3103.cs.unb.ca:43075",
         authenticated: false,
+        imagesData: null,
         petsData: null,
         loggedIn: null,
         input: {
@@ -127,7 +128,9 @@ var vm = new Vue({
         selectedImage: {
             ImageFileExtension: "", 
             ImageFileName: "",
-            ImagePath: ""
+            ImagePath: "",
+            ImageTitle: "",
+            ImageDescription: ""
         },
         selectedPost: {
             caption: ""
@@ -166,7 +169,7 @@ var vm = new Vue({
                       </button>
                       <div class="collapse" id="menu">
                          <div class="card card-body">
-                            <h2>
+                            <h2 v-on:click="logout()">
                                Logout
                             </h2>
                             <h2>Info</h2>
@@ -178,12 +181,12 @@ var vm = new Vue({
                 </nav>
              </div>
           </div>
+
           <div class="row bg-light text-dark m-2">
              <userHome></userHome>
           </div>
        </section>
        <section v-if="!authenticated">
-          <div>
              <div class="form-group text-center">
                 <input class="col-4 mx-auto form-control" type="text" name="username" v-model="input.username" placeholder="Username" />
                 <input class="col-4 mx-auto form-control" type="password" name="password" v-model="input.password" placeholder="Password" />
@@ -199,7 +202,22 @@ var vm = new Vue({
        </div>
 
     </div>
+    </div>
         `,
+        mounted: function() {
+            axios
+            .get(this.serviceURL+"/signin")
+            .then(response => {
+              if (response.data.status == "success") {
+                this.authenticated = true;
+                this.loggedIn = response.data.user_id;
+              }
+            })
+            .catch(error => {
+                this.authenticated = false;
+                console.log(error);
+            }); 
+        },
     methods: {
         login() {
 if (this.input.username != "" && this.input.password != "") {
@@ -223,18 +241,52 @@ axios
 alert("A username and password must be present");
 }
 },
-
-
 logout() {
-    alert("No magic on the server yet. You'll have to write the logout code there.");
+    // alert("No magic on the server yet. You'll have to write the logout code there.");
     axios
     .delete(this.serviceURL+"/signin")
     .then(response => {
-    location.reload();
+        this.authenticated = false;
+        this.loggedIn = null;
+        document.getElementById("form-group").reset()
+
     })
     .catch(e => {
     console.log(e);
     });
     },
-        }
+    fetchImages() {
+        axios
+        .get(this.serviceURL+"/pets/<int:petId>/images")
+        .then(response => {
+            this.imagesData = response.data.images;
+        })
+        .catch(e => {
+          alert("Unable to load the Image data");
+          console.log(e);
+        });
+      },
+      uploadImage(form) {
+            axios
+            .post(this.serviceURL+"/static", {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                }
+            })
+            .then(response => {
+                console.log(res);
+            })
+            .catch(e => {
+                alert("There was a problem uploading your image");
+                console.log(e);
+            });
+            }
+        },
+        // postImage(form) {
+        //     uploadImage(form);
+        //     axios
+        //     .post(this.serviceURL+"/pets/<int:petId>/images", {
+
+        //     }
+        // }
 });
