@@ -5,6 +5,5 @@ CREATE PROCEDURE getPosts(IN id VARCHAR(55))
 BEGIN
   SELECT *
     FROM images
-    WHERE PostId = id;
 END //
 DELIMITER ;
