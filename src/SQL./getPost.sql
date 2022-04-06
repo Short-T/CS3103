@@ -1,9 +1,10 @@
 DELIMITER //
 DROP PROCEDURE IF EXISTS getPosts //
 
-CREATE PROCEDURE getPosts()
+CREATE PROCEDURE getPosts(IN id INT)
 BEGIN
   SELECT *
     FROM images
+    WHERE PetId = id;
 END //
 DELIMITER ;
