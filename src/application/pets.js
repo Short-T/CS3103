@@ -144,7 +144,7 @@ var vm = new Vue({
        </div>
        </div>
        <!--The main Body of the page-->
-       <section v-if="!authenticated">
+       <section v-if="authenticated">
           <div class="relative">
              <div class="row bg-dark text-white m-2">
                 <nav class="nav nav-tabs">
@@ -182,7 +182,7 @@ var vm = new Vue({
              <userHome></userHome>
           </div>
        </section>
-       <section v-if="authenticated">
+       <section v-if="!authenticated">
           <div>
              <div class="form-group text-center">
                 <input class="col-4 mx-auto form-control" type="text" name="username" v-model="input.username" placeholder="Username" />
