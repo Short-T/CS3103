@@ -1,6 +1,6 @@
 #feed {
     height: 100%;
-    max-height: 500px;
+    max-height: 1000px;
     -ms-overflow-style: none;
     /* for Internet Explorer, Edge */
     scrollbar-width: none;
@@ -16,7 +16,9 @@
 ul {
     list-style-type: none;
 }
-
+:hover {
+    cursor: url(cursor.cur),auto;
+}
 div.collapse:hover {
     background-color: #eeeeee;
     cursor: pointer;
@@ -41,6 +43,9 @@ section {
     text-align: space-around;
     margin: auto;
 }
+.btn .dropdown-toggle #menu {
+    color: #0000aa;
+}
 
 input[type=text], select {
   width: 100%;
@@ -52,35 +57,30 @@ input[type=text], select {
   box-sizing: border-box;
 }
 
-input[type=number] {
-  width: 100%;
-  padding: 12px 20px;
-  margin: 8px 0;
-  display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  box-sizing: border-box;
-}
-
 input[type=submit] {
-  width: 50%;
+  width: 100%;
   background-color: #4CAF50;
   color: white;
   padding: 14px 20px;
   margin: 8px 0;
   border: none;
   border-radius: 4px;
-  left: 50%
   cursor: pointer;
 }
-
 
 input[type=submit]:hover {
   background-color: #45a049;
 }
 
-.petForm {
-  border-radius: 5px;
-  background-color: #f2f2f2;
-  padding: 20px;
+.tay-form-style {
+    position:relative;
+    margin:auto;
+    border-radius:20px;
+    width:90%;
+    height:auto;
+    max-width:500px;
+    padding:15px;
+    box-sizing:border-box;
+    box-shadow: 0px 5px 8px 3px rgba(0,156,15,0.5);
 }
+
