@@ -1,35 +1,53 @@
 
+
 Vue.component('Pet', {
     props: ['petName', 'petSpecies'],
     template: `<span class="text-left"> 
-        <h4>{{PetName}}</h4>
-        <p>{{PetSpecies}}</p>
+        <h4>{{petName}}</h4>
+        <p>{{petSpecies}}</p>
 
     </span>`
 })
-Vue.component('Pet-List', {
+Vue.component('PetList', {
     template: `<span>
         <ul>
             <li v-for="pet in pets">
-                <Pet :petName="pet.petName" :petSpecies="pet.petSpecies"></Pet>
+                <Pet v-bind:petName="pet.petName" v-bind:petSpecies="pet.petSpecies"></Pet>
             </li>
         </ul>
     </span>
         `,
-    data() {
-        return {
-            pets: [{
-                petName: 'Cleo',
-                petSpecies: 'Cat'
-            }, {
-                petName: 'Sylvester',
-                petSpecies: 'Cat'
-            }, {
-                petName: 'Tweety',
-                petSpecies: 'Cannary'
-            }]
-        }
-    }
+        props: ['loggedIn'],
+    // data() {
+    //     return {
+    //         pets: [{
+    //             petName: 'Monikier',
+    //             petSpecies: 'Cat'
+    //         }, {
+    //             petName: 'Sylvester',
+    //             petSpecies: 'Cat'
+    //         }, {
+    //             petName: 'Tweety',
+    //             petSpecies: 'Cannary'
+    //         }]
+    //     }
+    // },
+    data : {
+        pets: [],
+    },
+    mounted() {
+        axios
+        .get(this.serviceURL+"/"+ loggedIn +"/pets")
+        .then(response =>  {
+          if (this.authenticated == true) {
+            this.petsData = response.data.pets;
+          }
+        })
+        .catch(e => {
+          alert("Unable to retrieve your pet data");
+          console.log(e);
+        });
+      }
 })
 Vue.component('post', {
     props: ['url', 'title', 'description'],
@@ -65,6 +83,21 @@ Vue.component('Post-List', {
         };
     }
 });
+Vue.component('uploadPage',{
+    template: `
+        <section>
+        <form>
+            <input type="file" id="myFile" name="filename">
+            <input type="submit" value="submit" v-on:click="upload">
+        </form>
+        </section>
+    `,
+    methods: {
+        upload() {
+            this.$parent.uploadImage('form');
+        }
+    }
+})
 Vue.component('userHome', {
     template: `
     <section>
@@ -182,10 +215,10 @@ var vm = new Vue({
                    </div>
                    <div class="col-0 col-lg-3"></div>
                    <div class="col-3 col-lg-2 text-dark">
-                      <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-expanded="false" aria-controls="userPets">
-                         <h2><i class="bi-menu"></i> Menu</h2>
-                      </button>
-                      <div class="collapse" id="menu">
+                   <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-target="#menu" aria-haspopup="true" aria-expanded="false" aria-controls="userPets">
+                   <h2><i class="bi-menu"></i> Menu</h2>
+                 </button>
+               <div class="dropdown-menu" id="menu">
                          <div class="card card-body">
                             <h2 v-on:click="logout()">
                                Logout
@@ -207,17 +240,35 @@ var vm = new Vue({
           <section v-if="profile">
             <h1> Profile will be displayed here </h1>
           </section>
-          <section v-if="petList">
+          <section v-if="petList" >
             <h1> List of pets will be displayed here </h1>
+            <PetList v-bind:loggedIn="loggedIn"></PetList>
             </section>
             <section v-if="userPosts">
             <h1> List of user posts will be displayed here </h1>
             </section>
             <section v-if="postForm">
-                <h1> Form to post image will be dispalyed here </h1>
+                <uploadPage></uploadPage>
             </section>
             <section v-if="addPet">
-                <h1> Form to add pet will be displayed here </h1>
+                <div class="tay-form-style">
+  			<form action=TODO>
+    				<label for="petName">Pet Name</label>
+    				<input type="text" v-model="textinput" class="form-control" placeholder="your pets name...">
+
+    				<label for="age">Pet Age</label>
+    				<input type="number" v-model="textinput" class="form-control" placeholder="your pets age (in human years)...">
+    
+    				<label for="species">Pet Species</label>
+    				<input type="text" v-model="textinput" class="form-control" placeholder="your pets species...">
+    
+    				<label for="breed">Pet Breed</label>
+    				<input type="text" v-model="textinput" class="form-control" placeholder="your pets breed...">
+    
+  
+    				<input type="submit" value="Submit"> 
+  			</form>
+		</div>
             </section>
             <section v-if="deletePet">
                 <h1> Form to delete pet will be displayed here </h1>
@@ -233,9 +284,7 @@ var vm = new Vue({
        </section>
        <div class="footer text-center">
        <h1>Contact</h1>
-       ldavids2@unb.ca
-       <br> tshort1@unb.ca
-       <br> tcampbe6@unb.ca
+       - - - - ldavids2@unb.ca - - - - tshort1@unb.ca - - - - tcampbe6@unb.ca - - - -
        <br> Copyright 2022
        </div>
 
