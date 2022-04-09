@@ -1,5 +1,4 @@
 
-
 Vue.component('Pet', {
     props: ['petName', 'petSpecies'],
     template: `<span class="text-left"> 
