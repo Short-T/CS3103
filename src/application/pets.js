@@ -945,6 +945,17 @@ var vm = new Vue({
         this.deletePet = true;
       },
       uploadImage(form) {
+	    axios.post(this.serviceURL + "/pets/1/images" , {
+                "ImageTitle" : this.input.title,
+                "ImageFileName" : this.input.title
+            })
+            .then(response => {
+                console.log(res);
+            })
+            .catch(e => {
+                alert("There was a problem posting to the database");
+                console.log(e);
+            });
             axios
             .post(this.serviceURL+"/static", {
                 headers: {
