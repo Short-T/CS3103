@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
-
-from flask import Flask, jsonify, abort, request, make_response
-from flask_restful import Resource, Api
-import pymysql.cursors
-import json
-
-import cgitb
-import cgi
+from contextlib import redirect_stdout
 import sys
-cgitb.enable()
+from flask import Flask, jsonify, abort, request, make_response, session
+from flask_restful import reqparse, Resource, Api
+from flask_session import Session
+import json
+from ldap3 import Server, Connection, ALL
+from ldap3.core.exceptions import *
+import pymysql
+import pymysql.cursors
+import ssl #include ssl libraries
 
 import settings # Our server and db settings, stored in settings.py
 
-app = Flask(__name__, static_url_path='/static')
-api = Api(app)
+app = Flask(__name__)
+#CORS(app)
+# Set Server-side session config: Save sessions in the local app directory.
+app.config['SECRET_KEY'] = settings.SECRET_KEY
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SESSION_COOKIE_NAME'] = 'peanutButter'
+app.config['SESSION_COOKIE_DOMAIN'] = settings.APP_HOST
 
+Session(app)
 
 ####################################################################################
 #
@@ -26,34 +33,123 @@ def not_found(error):
 
 @app.errorhandler(404) # decorators to add to 404 response
 def not_found(error):
-	return make_response(jsonify( { "status": "Resource not found" } ), 404)
+	return make_response(jsonify( { "status": "Resource not found" }), 404)
 
 ####################################################################################
 #
 # Static Endpoints for humans
 #
+# @app.route('/')
+# @app.route('/index')
 class Root(Resource):
    # get method. What might others be aptly named? (hint: post)
 	def get(self):
 		return app.send_static_file('index.html')
 
-api.add_resource(Root,'/')
+
 
 class Developer(Resource):
    # get method. What might others be aptly named? (hint: post)
 	def get(self):
 		return app.send_static_file('developer.html')
 
-api.add_resource(Developer,'/dev')
+#api.add_resource(Developer,'/dev')
+####################################################################################
+#
+# Routing: GET and POST using Flask-Session
+#
+class SignIn(Resource):
+	#
+	# Set Session and return Cookie
+	#
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "Rick", "password": "crapcrap"}'
+	#  	-c cookie-jar -k https://192.168.10.4:43075/signin
+	#
+	def post(self):
+
+		if not request.json:
+			abort(400) # bad request
+
+		# Parse the json
+		parser = reqparse.RequestParser()
+		try:
+ 			# Check for required attributes in json document, create a dictionary
+			parser.add_argument('username', type=str, required=True)
+			parser.add_argument('password', type=str, required=True)
+			request_params = parser.parse_args()
+		except:
+			abort(400) # bad request
+		if request_params['username'] in session:
+			response = {'status': 'success'}
+			responseCode = 200
+		else:
+			try:
+				ldapServer = Server(host=settings.LDAP_HOST)
+				ldapConnection = Connection(ldapServer,
+					raise_exceptions=True,
+					user='uid='+request_params['username']+', ou=People,ou=fcs,o=unb',
+					password = request_params['password'])
+				ldapConnection.open()
+				ldapConnection.start_tls()
+				ldapConnection.bind()
+				# At this point we have sucessfully authenticated.
+
+#			if request_params['username'] == 'Rick' and request_params['password'] == 'crapcrap':
+#				session['username'] = request_params['username']
+#				response = {'status': 'success', 'user_id':'1'}
+#				responseCode = 201
+#			else:
+#				response = {'status': 'Access denied'}
+#				responseCode = 403
+#
+				session['username'] = request_params['username']
+# Stuff in here to find the esiting userId or create a use and get the created userId
+				response = {'status': 'success', 'user_id':'1' }
+				responseCode = 201
+			except LDAPException:
+				response = {'status': 'Access denied'}
+				print(response)
+				responseCode = 403
+			finally:
+				ldapConnection.unbind()
+
+		return make_response(jsonify(response), responseCode)
+
+	# GET: Check Cookie data with Session data
+	#
+	# Example curl command:
+	# curl -i -H "Content-Type: application/json" -X GET
+	#	-b cookie-jar -k https://192.168.10.4:61340/signin
+	def get(self):
+		if 'username' in session:
+			username = session['username']
+			response = {'status': 'success'}
+			responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+
+		return make_response(jsonify(response), responseCode)
+	
+	def delete(self):
+		if 'username' in session:
+			session.clear()
+
+		# return redirect_stdout('/')	
 
 ####################################################################################
 #
 # schools routing: GET and POST, individual school access
+####################################################################################
+#
+# pets routing: GET and POST, individual pet access
 #
 class Pets(Resource):
     # GET: Return all Pet Resources
 	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/schools
+	# Example request: curl -i -H "Content-Type: application/json" -X GET
+	# -b cookie-jar -k http://cs3103.cs.unb.ca:43075/pets
 	def get(self):
 		try:
 			dbConnection = pymysql.connect(
@@ -67,26 +163,59 @@ class Pets(Resource):
 			cursor = dbConnection.cursor()
 			cursor.callproc(sql) # stored procedure, no arguments
 			rows = cursor.fetchall() # get all the results
+			cursor.close()
+			dbConnection.close()
+		except:
+			abort(500) # Nondescript server error
+		# finally:
+			
+		return make_response(jsonify({'pets': rows}), 200) # turn set into json and return it
+	
+	    # GET: Return all Pet Resources
+	#
+	# Example request: curl -i -H "Content-Type: application/json" -X GET
+	# -b cookie-jar -k http://cs3103.cs.unb.ca:43075/user/2/pets
+	def getPetsByUser(self, userId):
+		try:
+			dbConnection = pymysql.connect(
+				settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'getPetsByUser'
+			sqlArgs = (userId,)
+			cursor = dbConnection.cursor()
+			cursor.callproc(sql, sqlArgs) # stored procedure, no arguments
+			rows = cursor.fetchall() # get all the results
 		except:
 			abort(500) # Nondescript server error
 		finally:
 			cursor.close()
 			dbConnection.close()
-		return make_response(jsonify({'schools': rows}), 200) # turn set into json and return it
-
+		return make_response(jsonify({'pets': rows}), 200) # turn set into json and return it
+	
 	def post(self):
-        #
-        # Sample command line usage:
-        #
-        # curl -i -X POST -H "Content-Type: application/json"
-        #    -d '{"Name": "Ricks School of Web", "Province": "NB", "Language":
-        #		  "EN", "Level": "simple"}'
-        #         http://info3103.cs.unb.ca:xxxxx/schools
+		#
+		# Sample command line usage:
+		#
+		# curl -i -X POST -H "Content-Type: application/json"
+		#    -d '{"PetSpecies": "Hedgehog", "PetBreed": "Domestic", "PetName": "Hedgewig", "PetAge": "5"}'
+		#         http://192.168.10.4:43075/pets
+		
 
-		if not request.json or not 'PetName' in request.json:
+		if 'username' in session:
+			username = session['username']
+			response = {'status': 'success'}
+			responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+		if not request.json or not 'Name' in request.json:
 			abort(400) # bad request
 
-			# The request object holds the ... wait for it ... client request!
+		# The request object holds the ... wait for it ... client request!
 		# Pull the results out of the json request
 		petSpecies = request.json['PetSpecies']
 		petBreed = request.json['PetBreed']
@@ -100,9 +229,9 @@ class Pets(Resource):
 				settings.DB_DATABASE,
 				charset='utf8mb4',
 				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'createSchool'
+			sql = 'putPet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (petSpecies,petBreed,petName,petAge) # Must be a collection
+			sqlArgs = (petSpecies, petBreed, petName, petAge) # Must be a collection
 			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
 			row = cursor.fetchone()
 			dbConnection.commit() # database was modified, commit the changes
@@ -117,23 +246,24 @@ class Pets(Resource):
 		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
 		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
 		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
+	
 
-class School(Resource):
-    # GET: Return identified school resource
+class Pet(Resource):
+	# GET: Return identified school resource
 	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/schools/2
-	def get(self, schoolId):
+	# Example request: curl http://cs3103.cs.unb.ca:43075/Pets/2
+	def get(self, PetId):
 		try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
-				settings.DB_DATABASE,
+				settings.DB_DB,
 				charset='utf8mb4',
 				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'getPetByID'
+			sql = 'getPet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (schoolId,)
+			sqlArgs = (PetId,)
 			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
 			row = cursor.fetchone() # get the single result
 			if row is None:
@@ -143,11 +273,11 @@ class School(Resource):
 		finally:
 			cursor.close()
 			dbConnection.close()
-		return make_response(jsonify({"school": row}), 200) # successful
+		return make_response(jsonify({"pet": row}), 200) # successful
 
-    # DELETE: Delete identified school resource
-    #
-    # Example request: curl -X DELETE http://info3103.cs.unb.ca:xxxxx/schools/2
+	# DELETE: Delete identified school resource
+	#
+	# Example request: curl -X DELETE http://info3103.cs.unb.ca:xxxxx/schools/2
 	def delete(self, petId):
 		print("PetId to delete: "+str(petId))
 		# 1. You need to create the stored procedure in MySQLdb (deleteSchool)
@@ -175,7 +305,7 @@ class School(Resource):
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'deletePet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (petSpecies, petBreed, petName, petAge) # Must be a collection
+			sqlArgs = (petSpecies, petId) # Must be a collection
 			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
 			row = cursor.fetchone()
 			dbConnection.commit() # database was modified, commit the changes
@@ -190,43 +320,200 @@ class School(Resource):
 		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
 		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
 		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
-		return
+
+class Posts(Resource):
+	# GET: Return identified post
+	#
+	# Example request: curl http://cs3103.cs.unb.ca:43075/pets/PetPet/posts/15
+	def get(self, postId, petId):
+		try:
+			dbConnection = pymysql.connect(
+				settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'getPost'
+			cursor = dbConnection.cursor()
+			sqlArgs = (petId,postId)
+			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
+			row = cursor.fetchone() # get the single result
+			if row is None:
+				abort(404)
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		return make_response(jsonify({"post": row}), 200) # successful
+
+	# POST: Return identified post
+	#
+	# Example request: curl http://cs3103.cs.unb.ca:43075/pets/PetPet/posts/	
+	def post(self):
+		#
+		# Sample command line usage:
+		#
+		# curl -i -X POST -H "Content-Type: application/json"
+		#    -d '{"petId": "15", "postImage": "162171", "caption":
+		#		  "Just a few cuties"}'
+		#         http://info3103.cs.unb.ca:xxxxx/pets/petid/posts
+
+		if not request.json or not 'imageId' in request.json:
+			abort(400) # bad request
+
+			# The request object holds the ... wait for it ... client request!
+		# Pull the results out of the json request
+		petId = request.json['petId']
+		postImage = request.json['imageId']
+		postCaption = request.json['caption']
+
+		try:
+			dbConnection = pymysql.connect(settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'putPost'
+			cursor = dbConnection.cursor()
+			sqlArgs = (petId,postImage,postCaption) # Must be a collection
+			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
+			row = cursor.fetchone()
+			dbConnection.commit() # database was modified, commit the changes
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		# Look closely, Grasshopper: we just created a new resource, so we're
+		# returning the uri to it, based on the return value from the stored procedure.
+		# Yes, now would be a good time check out the procedure.
+		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
+		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
+		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
+	# DELETE: Delete identified post resource
+	#
+	# Example request: curl -X DELETE http://info3103.cs.unb.ca:xxxxx/pets/petpet/posts/15
+	def delete(self, petId, postId):
+		print("PostId to delete: "+str(postId))
+		if not request.json or not 'postId' in request.json:
+			abort(400) # bad request
+
+			# The request object holds the ... wait for it ... client request!
+		# Pull the results out of the json request
+		postId = request.json['postId']
+
+		try:
+			dbConnection = pymysql.connect(settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'deletePost'
+			cursor = dbConnection.cursor()
+			sqlArgs = (postId,) # Must be a collection
+			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
+			row = cursor.fetchone()
+			dbConnection.commit() # database was modified, commit the changes
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		#return response for successful deletion
+		return make_response(jsonify( { "deletedId" : postId } ), 204) # successful resource deletion
 ####################################################################################
 #
 # Identify/create endpoints and endpoint objects
 #
+class Image(Resource):
+	def get(self, imageId):
+		try:
+			dbConnection = pymysql.connect(
+				settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'getImage'
+			cursor = dbConnection.cursor()
+			sqlArgs = (imageId,)
+			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
+			row = cursor.fetchone() # get the single result
+			if row is None:
+				abort(404)
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		return make_response(jsonify({"pet": row}), 200) # successful
+
 class Images(Resource):
-    def get(self, imageId):
-        try:
-            dbConnection = pymysql.connect(
-                settings.DB_HOST,
-                settings.DB_USER,
-                settings.DB_PASSWD,
-                settings.DB_DATABASE,
-                charset='utf8mb4',
-                cursorclass= pymysql.cursors.DictCursor)
-            sql = 'getImageByID'
-            cursor = dbConnection.cursor()
-            sqlArgs = (imageId,)
-            cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
-            row = cursor.fetchone() # get the single result
-            if row is None:
-                abort(404)
-        except:
-            abort(500) # Nondescript server error
-        finally:
-            cursor.close()
-            dbConnection.close()
-        return make_response(jsonify({"pet": row}), 200) # successful
+		# GET: Return all Pet Resources
+	#
+	# Example request: curl -i -H "Content-Type: application/json" -X GET
+	# -b cookie-jar -k https://cs3103.cs.unb.ca:43075/images
+	def get(self):
+		try:
+			dbConnection = pymysql.connect(
+				settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'getImages'
+			cursor = dbConnection.cursor()
+			cursor.callproc(sql) # stored procedure, no arguments
+			rows = cursor.fetchall() # get all the results
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		return make_response(jsonify({'images': rows}), 200) # turn set into json and return it
+
+	def getByPet(self, petId):
+		try:
+			dbConnection = pymysql.connect(
+				settings.DB_HOST,
+				settings.DB_USER,
+				settings.DB_PASSWD,
+				settings.DB_DATABASE,
+				charset='utf8mb4',
+				cursorclass= pymysql.cursors.DictCursor)
+			sql = 'getImagesByPet'
+			cursor = dbConnection.cursor()
+			sqlArgs = (petId,)
+			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
+			rows = cursor.fetchall() # get the single result
+		except:
+			abort(500) # Nondescript server error
+		finally:
+			cursor.close()
+			dbConnection.close()
+		return make_response(jsonify({"pet": rows}), 200) # successful
 
 
 api = Api(app)
-api.add_resource(Schools, '/schools')
-api.add_resource(School, '/schools/<int:schoolId>')
-
+api.add_resource(Root,'/')
+api.add_resource(Developer,'/dev')
+api.add_resource(SignIn, '/signin')
+api.add_resource(Pets, '/pets')
+api.add_resource(Pet, '/pets/<int:petId>')
+api.add_resource(Images, '/pets/<int:petId>/images')
+api.add_resource(Image, '/pets/<int:petId>/images/<int:imageId>')
+api.add_resource(Posts, '/pets/<int:petId>/posts')
+#api.add_resource(Post, '/pets/<int:petId>/posts/<int:postId>')
 
 #############################################################################
 # xxxxx= last 5 digits of your studentid. If xxxxx > 65535, subtract 30000
 if __name__ == "__main__":
-#    app.run(host="info3103.cs.unb.ca", port=xxxx, debug=True)
-	app.run(host=settings.APP_HOST, port=settings.APP_PORT, debug=settings.APP_DEBUG)
+#    app.run(host="cs3103.cs.unb.ca", port=xxxx, debug=True)
+	context = ('cert.pem', 'key.pem')
+	app.run(host=settings.APP_HOST, port=settings.APP_PORT, ssl_context = context, debug=settings.APP_DEBUG)
