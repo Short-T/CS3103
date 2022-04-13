@@ -256,7 +256,7 @@ var vm = new Vue({
                     </ul>
                 </div>
                 <div v-else>
-                    <h1> List of ALL pets </h1>
+                    <h1> List of all pets </h1>
                     <ul>
                         <div v-for="pet in petsData">
                             <div class="list-of-pets">
