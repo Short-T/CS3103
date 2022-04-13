@@ -134,14 +134,53 @@ class SignIn(Resource):
 #				responseCode = 403
 #
 				session['username'] = request_params['username']
+
+
+				print(request_params['username'])
+
 # Stuff in here to find the esiting userId or create a use and get the created userId
-				response = {'status': 'success', 'user_id':'1' }
+
+				dbConnection = pymysql.connect(
+					settings.DB_HOST,
+					settings.DB_USER,
+					settings.DB_PASSWD,
+					settings.DB_DATABASE,
+					charset='utf8mb4',
+					cursorclass= pymysql.cursors.DictCursor)
+
+				sql = 'getUserByName'
+				sqlArgs = (request_params['username'],)
+				cursor = dbConnection.cursor()
+				cursor.callproc(sql, sqlArgs) # stored procedure, no arguments
+				row = cursor.fetchone() # get all the results
+				cursor.close()
+				userId = 1
+
+				if row == None:
+					
+					sql = 'putUser'
+					sqlArgs = (request_params['username'],)
+					cursor = dbConnection.cursor()
+					cursor.callproc(sql, sqlArgs) # stored procedure, no arguments
+					dbConnection.commit()
+					row = cursor.fetchone() # get all the results
+					userId = row["LAST_INSERT_ID()"]
+					print("in if")
+					print(userId)
+
+				else:
+
+					userId = row['UserId']
+
+				response = {'status': 'success', 'user_id': userId}
 				responseCode = 201
 			except LDAPException:
 				response = {'status': 'Access denied'}
 				print(response)
 				responseCode = 403
 			finally:
+				cursor.close()
+				dbConnection.close()
 				ldapConnection.unbind()
 
 		return make_response(jsonify(response), responseCode)
@@ -201,31 +240,6 @@ class Pets(Resource):
 			
 		return make_response(jsonify({'pets': rows}), 200) # turn set into json and return it
 	
-	    # GET: Return all Pet Resources
-	#
-	# Example request: curl -i -H "Content-Type: application/json" -X GET
-	# -b cookie-jar -k http://cs3103.cs.unb.ca:43075/user/2/pets
-	def getPetsByUser(self, userId):
-		try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'getPetsByUser'
-			sqlArgs = (userId,)
-			cursor = dbConnection.cursor()
-			cursor.callproc(sql, sqlArgs) # stored procedure, no arguments
-			rows = cursor.fetchall() # get all the results
-		except:
-			abort(500) # Nondescript server error
-		finally:
-			cursor.close()
-			dbConnection.close()
-		return make_response(jsonify({'pets': rows}), 200) # turn set into json and return it
-	
 	def post(self):
 		#
 		# Sample command line usage:
@@ -251,6 +265,7 @@ class Pets(Resource):
 		petBreed = request.json['PetBreed']
 		petName = request.json['PetName']
 		petAge = request.json['PetAge']
+		userId = request.json['UserId']
 
 		try:
 			dbConnection = pymysql.connect(settings.DB_HOST,
@@ -261,21 +276,21 @@ class Pets(Resource):
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'putPet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (petSpecies, petBreed, petName, petAge) # Must be a collection
+			sqlArgs = (petSpecies, petBreed, petName, petAge, userId) # Must be a collection
 			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
-			row = cursor.fetchone()
 			dbConnection.commit() # database was modified, commit the changes
+			row = cursor.fetchone()
+			
 		except:
 			abort(500) # Nondescript server error
 		finally:
 			cursor.close()
 			dbConnection.close()
-		# Look closely, Grasshopper: we just created a new resource, so we're
-		# returning the uri to it, based on the return value from the stored procedure.
-		# Yes, now would be a good time check out the procedure.
-		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
-		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
-		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
+
+
+		response = {'status': 'success', 'user_id': userId}
+		responseCode = 201
+		return make_response(jsonify(response), responseCode) # successful resource creation
 	
 
 class Pet(Resource):
@@ -546,4 +561,4 @@ api.add_resource(Posts, '/pets/<int:petId>/posts')
 if __name__ == "__main__":
 #    app.run(host="cs3103.cs.unb.ca", port=xxxx, debug=True)
 	context = ('cert.pem', 'key.pem')
-	app.run(host=settings.APP_HOST, port=settings.APP_PORT, ssl_context = context, debug=settings.APP_DEBUG)
+	app.run(host=settings.APP_HOST, port=settings.APP_PORT, ssl_context = context, debug=settings.APP_DEBUG)ings.APP_DEBUG)
