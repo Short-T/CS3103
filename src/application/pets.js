@@ -116,7 +116,7 @@ Your Pets
 </button>
         <div class="collapse p-2" id="userPets">
             <div class="card card-body">
-                <h2>
+                <h2 v-on:click="petList()">
                     <i class="bi-square"></i> Show
                 </h2>
                 <h2 v-on:click="petAddView()">
@@ -139,6 +139,9 @@ Your Pets
 </section>
     `,
     methods: {
+        petList() {
+            this.$parent.goPetList(true);
+        },
         postView() {
             this.$parent.goPostForm();
         },
@@ -158,6 +161,7 @@ var vm = new Vue({
         home: true,
         profile: false,
         petList: false,
+        userPets: false,
         userPosts: false,
         postForm: false,
         addPet: false,
@@ -223,7 +227,7 @@ var vm = new Vue({
                                Logout
                             </h2>
                             <h2>Info</h2>
-                            <h2 v-on:click="goPetList()">Pets</h2>
+                            <h2 v-on:click="goPetList(false)">Pets</h2>
                             <h2 v-on:click="goUserPosts()">Posts</h2>
                          </div>
                       </div>
@@ -240,19 +244,31 @@ var vm = new Vue({
             <h1> Profile will be displayed here </h1>
           </section>
           <section v-if="petList">
-            <h1> List of pets *WILL* be displayed here </h1>
-            <div v-if="petsData != null" id="userPetsList">
-                <ul>
-                    <div v-for="pet in petsData">
-                        <div class="d-flex w-100 justify-content-between">
-                           {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+            <div v-if="petsData != null" id="petsList">
+                <div v-if="userPets == true">
+                    <h1> Your pets :  </h1>
+                    <ul>
+                        <div v-for="pet in petsData">
+                            <div class="list-of-pets" v-if="pet.UserId == loggedIn">
+                                {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+                            </div>
                         </div>
-                    </div>
-                </ul>
+                    </ul>
+                </div>
+                <div v-else>
+                    <h1> List of ALL pets </h1>
+                    <ul>
+                        <div v-for="pet in petsData">
+                            <div class="list-of-pets">
+                                {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+                            </div>
+                        </div>
+                    </ul>
+                </div>
             </div>
             <div v-else>
                 <h2> Pets could not be displayed </h2>
-                <button type="button" v-on:click="goPetList()" class="btn btn-outline-primary">Try again</button>
+                <button type="button" v-on:click="goPetList(false)" class="btn btn-outline-primary">Try again</button>
             </div>
             </section>
             <section v-if="userPosts">
@@ -368,6 +384,7 @@ var vm = new Vue({
           this.home = true;
           this.profile = false;
           this.petList = false;
+          this.userPets = false;
           this.userPosts = false;
           this.postForm = false;
           this.addPet = false;
@@ -377,12 +394,13 @@ var vm = new Vue({
           this.home = false;
           this.profile = true;
           this.petList = false;
+          this.userPets = false;
           this.userPosts = false;
           this.postForm = false;
           this.addPet = false;
           this.deletePet = false;
       },
-      goPetList() {
+      goPetList(isUser) {
         this.home = false;
         this.profile = false;
         this.petList = true;
@@ -390,6 +408,7 @@ var vm = new Vue({
         this.postForm = false;
         this.addPet = false;
         this.deletePet = false;
+        this.userPets = isUser;
         axios
         .get(this.serviceURL+"/pets")
         .then(response =>  {
@@ -404,6 +423,7 @@ var vm = new Vue({
         this.home = false;
         this.profile = false;
         this.petList = false;
+        this.userPets = false;
         this.userPosts = true;
         this.postForm = false;
         this.addPet = false;
@@ -413,6 +433,7 @@ var vm = new Vue({
         this.home = false;
         this.profile = false;
         this.petList = false;
+        this.userPets = false;
         this.userPosts = false;
         this.postForm = true;
         this.addPet = false;
@@ -422,6 +443,7 @@ var vm = new Vue({
         this.home = false;
         this.profile = false;
         this.petList = false;
+        this.userPets = false;
         this.userPosts = false;
         this.postForm = false;
         this.addPet = true;
@@ -431,6 +453,7 @@ var vm = new Vue({
         this.home = false;
         this.profile = false;
         this.petList = false;
+        this.userPets = false;
         this.userPosts = false;
         this.postForm = false;
         this.addPet = false;
