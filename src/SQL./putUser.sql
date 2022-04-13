@@ -1,8 +1,8 @@
 DELIMITER //
 DROP PROCEDURE IF EXISTS putUser //
-CREATE PROCEDURE putUser(IN  userName VARCHAR(55))
+CREATE PROCEDURE putUser(IN  userName VARCHAR(50))
 BEGIN   
-    INSERT INTO pets(UserName) VALUE
+    INSERT INTO users(UserName) VALUE
         (userName);
     IF(ROW_COUNT()=0) THEN
         SIGNAL SQLSTATE '52700'
