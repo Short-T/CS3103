@@ -44,14 +44,15 @@ def not_found(error):
 
 ####################################################################################
 #
-# Static Endpoints for humans
+# EndPoints
 #
 # @app.route('/')
 # 
 class Root(Resource):
-   # get method. What might others be aptly named? (hint: post)
+   # GET for index.html
 	def get(self):
 		return app.send_static_file('index.html')
+	# Image management
 	def index():
 		files = os.listdir(app.config['UPLOAD_PATH'])
 		return render_template('index.html', files=files)
@@ -83,17 +84,17 @@ class Developer(Resource):
 	def get(self):
 		return app.send_static_file('developer.html')
 
-#api.add_resource(Developer,'/dev')
 ####################################################################################
 #
-# Routing: GET and POST using Flask-Session
+# SignIn : POST ~ GET ~ DELETE
 #
+####################################################################################
 class SignIn(Resource):
 	#
 	# Set Session and return Cookie
 	#
 	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "Rick", "password": "crapcrap"}'
+	# curl -i -H "Content-Type: application/json" -X POST -d '{"username": "tshort1", "password": "nottelling"}'
 	#  	-c cookie-jar -k https://192.168.10.4:43075/signin
 	#
 	def post(self):
@@ -123,19 +124,9 @@ class SignIn(Resource):
 				ldapConnection.open()
 				ldapConnection.start_tls()
 				ldapConnection.bind()
-				# At this point we have sucessfully authenticated.
-
-#			if request_params['username'] == 'Rick' and request_params['password'] == 'crapcrap':
-#				session['username'] = request_params['username']
-#				response = {'status': 'success', 'user_id':'1'}
-#				responseCode = 201
-#			else:
-#				response = {'status': 'Access denied'}
-#				responseCode = 403
-#
 				session['username'] = request_params['username']
 
-# Stuff in here to find the esiting userId or create a use and get the created userId
+			# Stuff in here to find the exiting userId or create a use and get the created userId
 
 				dbConnection = pymysql.connect(
 					settings.DB_HOST,
@@ -185,8 +176,8 @@ class SignIn(Resource):
 	# GET: Check Cookie data with Session data
 	#
 	# Example curl command:
-	# curl -i -H "Content-Type: application/json" -X GET
-	#	-b cookie-jar -k https://192.168.10.4:61340/signin
+	# curl -i -H "Content-Type: application/json" -X GET -b cookie-jar -k https://192.168.10.4:43075/signin
+
 	def get(self):
 		if 'username' in session:
 			username = session['username']
@@ -198,6 +189,7 @@ class SignIn(Resource):
 
 		return make_response(jsonify(response), responseCode)
 	
+	# DELETE : Remove session
 	def delete(self):
 		if 'username' in session:
 			session.clear()
@@ -206,11 +198,9 @@ class SignIn(Resource):
 
 ####################################################################################
 #
-# schools routing: GET and POST, individual school access
+# Pets : POST ~ GET
+#
 ####################################################################################
-#
-# pets routing: GET and POST, individual pet access
-#
 class Pets(Resource):
     # GET: Return all Pet Resources
 	#
@@ -289,11 +279,16 @@ class Pets(Resource):
 		responseCode = 201
 		return make_response(jsonify(response), responseCode) # successful resource creation
 	
-
+####################################################################################
+#
+# PET : GET ~ DELETE
+#
+####################################################################################
 class Pet(Resource):
-	# GET: Return identified school resource
+   # GET: Return all Pet Resources
 	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/Pets/2
+	# Example request: curl -i -H "Content-Type: application/json" -X GET
+	# -b cookie-jar -k http://cs3103.cs.unb.ca:43075/pets/2
 	def get(self, petId):
 
 		if 'username' in session:
@@ -327,6 +322,7 @@ class Pet(Resource):
 			dbConnection.close()
 		return make_response(jsonify({"pets": row}), 200) # successful
 
+# DELETE : remove pet
 	def delete(self, petId):
 
 		try:
@@ -375,7 +371,7 @@ class Image(Resource):
 		return make_response(jsonify({"pet": row}), 200) # successful
 
 class Images(Resource):
-		# GET: Return all Pet Resources
+	# GET: Return all Pet Resources
 	#
 	# Example request: curl -i -H "Content-Type: application/json" -X GET
 	# -b cookie-jar -k https://cs3103.cs.unb.ca:43075/images
