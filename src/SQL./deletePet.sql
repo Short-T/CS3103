@@ -1,10 +1,10 @@
 DELIMITER //
 DROP PROCEDURE IF EXISTS deletePet //
 
-CREATE PROCEDURE deletePet(IN id INT, IN owner INT)
+CREATE PROCEDURE deletePet(IN id INT)
 BEGIN
   DELETE
     FROM pets
-    WHERE id=PetId AND owner=UserId;
+    WHERE id=PetId;
 END //
 DELIMITER ;
