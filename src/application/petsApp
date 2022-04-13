@@ -327,26 +327,7 @@ class Pet(Resource):
 			dbConnection.close()
 		return make_response(jsonify({"pets": row}), 200) # successful
 
-	# DELETE: Delete identified school resource
-	#
-	# Example request: curl -X DELETE http://info3103.cs.unb.ca:xxxxx/schools/2
 	def delete(self, petId):
-		print("PetId to delete: "+str(petId))
-		# 1. You need to create the stored procedure in MySQLdb (deleteSchool)
-		# 2. You need to write the code here to call the stored procedure
-		# 3. What should/could the response code be? How to return it?
-		# 4. Anytime you change a database, you ned to commit that change.
-		#       See the POST example for more
-
-		if not request.json or not 'PetName' in request.json:
-			abort(400) # bad request
-
-			# The request object holds the ... wait for it ... client request!
-		# Pull the results out of the json request
-		petSpecies = request.json['PetSpecies']
-		petBreed = request.json['PetBreed']
-		petName = request.json['PetName']
-		petAge = request.json['PetAge']
 
 		try:
 			dbConnection = pymysql.connect(settings.DB_HOST,
@@ -357,130 +338,18 @@ class Pet(Resource):
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'deletePet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (petSpecies, petId) # Must be a collection
+			sqlArgs = (petId,) # Must be a collection
 			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
-			row = cursor.fetchone()
-			dbConnection.commit() # database was modified, commit the changes
+			dbConnection.commit() # database was modified, commit the ch
+			
 		except:
 			abort(500) # Nondescript server error
 		finally:
 			cursor.close()
 			dbConnection.close()
-		# Look closely, Grasshopper: we just created a new resource, so we're
-		# returning the uri to it, based on the return value from the stored procedure.
-		# Yes, now would be a good time check out the procedure.
-		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
-		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
-		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
 
-class Posts(Resource):
-	# GET: Return identified post
-	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/pets/PetPet/posts/15
-	def get(self, postId, petId):
-		try:
-			dbConnection = pymysql.connect(
-				settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'getPost'
-			cursor = dbConnection.cursor()
-			sqlArgs = (petId,postId)
-			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
-			row = cursor.fetchone() # get the single result
-			if row is None:
-				abort(404)
-		except:
-			abort(500) # Nondescript server error
-		finally:
-			cursor.close()
-			dbConnection.close()
-		return make_response(jsonify({"post": row}), 200) # successful
+		return make_response(jsonify( { "response" : "success" } ), 201) # successful resource creation
 
-	# POST: Return identified post
-	#
-	# Example request: curl http://cs3103.cs.unb.ca:43075/pets/PetPet/posts/	
-	def post(self):
-		#
-		# Sample command line usage:
-		#
-		# curl -i -X POST -H "Content-Type: application/json"
-		#    -d '{"petId": "15", "postImage": "162171", "caption":
-		#		  "Just a few cuties"}'
-		#         http://info3103.cs.unb.ca:xxxxx/pets/petid/posts
-
-		if not request.json or not 'imageId' in request.json:
-			abort(400) # bad request
-
-			# The request object holds the ... wait for it ... client request!
-		# Pull the results out of the json request
-		petId = request.json['petId']
-		postImage = request.json['imageId']
-		postCaption = request.json['caption']
-
-		try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'putPost'
-			cursor = dbConnection.cursor()
-			sqlArgs = (petId,postImage,postCaption) # Must be a collection
-			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
-			row = cursor.fetchone()
-			dbConnection.commit() # database was modified, commit the changes
-		except:
-			abort(500) # Nondescript server error
-		finally:
-			cursor.close()
-			dbConnection.close()
-		# Look closely, Grasshopper: we just created a new resource, so we're
-		# returning the uri to it, based on the return value from the stored procedure.
-		# Yes, now would be a good time check out the procedure.
-		uri = 'http://'+settings.APP_HOST+':'+str(settings.APP_PORT)
-		uri = uri+str(request.url_rule)+'/'+str(row['LAST_INSERT_ID()'])
-		return make_response(jsonify( { "uri" : uri } ), 201) # successful resource creation
-	# DELETE: Delete identified post resource
-	#
-	# Example request: curl -X DELETE http://info3103.cs.unb.ca:xxxxx/pets/petpet/posts/15
-	def delete(self, petId, postId):
-		print("PostId to delete: "+str(postId))
-		if not request.json or not 'postId' in request.json:
-			abort(400) # bad request
-
-			# The request object holds the ... wait for it ... client request!
-		# Pull the results out of the json request
-		postId = request.json['postId']
-
-		try:
-			dbConnection = pymysql.connect(settings.DB_HOST,
-				settings.DB_USER,
-				settings.DB_PASSWD,
-				settings.DB_DATABASE,
-				charset='utf8mb4',
-				cursorclass= pymysql.cursors.DictCursor)
-			sql = 'deletePost'
-			cursor = dbConnection.cursor()
-			sqlArgs = (postId,) # Must be a collection
-			cursor.callproc(sql,sqlArgs) # stored procedure, with arguments
-			row = cursor.fetchone()
-			dbConnection.commit() # database was modified, commit the changes
-		except:
-			abort(500) # Nondescript server error
-		finally:
-			cursor.close()
-			dbConnection.close()
-		#return response for successful deletion
-		return make_response(jsonify( { "deletedId" : postId } ), 204) # successful resource deletion
-####################################################################################
-#
-# Identify/create endpoints and endpoint objects
-#
 class Image(Resource):
 	def get(self, imageId):
 		try:
@@ -560,8 +429,6 @@ api.add_resource(Pets, '/pets')
 api.add_resource(Pet, '/pets/<int:petId>')
 api.add_resource(Images, '/pets/<int:petId>/images')
 api.add_resource(Image, '/pets/<int:petId>/images/<int:imageId>')
-api.add_resource(Posts, '/pets/<int:petId>/posts')
-#api.add_resource(Post, '/pets/<int:petId>/posts/<int:postId>')
 
 #############################################################################
 # xxxxx= last 5 digits of your studentid. If xxxxx > 65535, subtract 30000
