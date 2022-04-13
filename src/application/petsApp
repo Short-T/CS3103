@@ -135,9 +135,6 @@ class SignIn(Resource):
 #
 				session['username'] = request_params['username']
 
-
-				print(request_params['username'])
-
 # Stuff in here to find the esiting userId or create a use and get the created userId
 
 				dbConnection = pymysql.connect(
@@ -256,7 +253,7 @@ class Pets(Resource):
 		else:
 			response = {'status': 'fail'}
 			responseCode = 403
-		if not request.json or not 'Name' in request.json:
+		if not request.json:
 			abort(400) # bad request
 
 		# The request object holds the ... wait for it ... client request!
@@ -288,7 +285,7 @@ class Pets(Resource):
 			dbConnection.close()
 
 
-		response = {'status': 'success', 'user_id': userId}
+		response = {'status': 'success', 'pet_id': row["LAST_INSERT_ID()"]}
 		responseCode = 201
 		return make_response(jsonify(response), responseCode) # successful resource creation
 	
@@ -297,20 +294,30 @@ class Pet(Resource):
 	# GET: Return identified school resource
 	#
 	# Example request: curl http://cs3103.cs.unb.ca:43075/Pets/2
-	def get(self, PetId):
+	def get(self, petId):
+
+		if 'username' in session:
+			username = session['username']
+			response = {'status': 'success'}
+			responseCode = 200
+		else:
+			response = {'status': 'fail'}
+			responseCode = 403
+			return make_response(jsonify(response), responseCode)
+
 		try:
 			dbConnection = pymysql.connect(
 				settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
-				settings.DB_DB,
+				settings.DB_DATABASE,
 				charset='utf8mb4',
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'getPet'
 			cursor = dbConnection.cursor()
-			sqlArgs = (PetId,)
+			sqlArgs = (petId,)
 			cursor.callproc(sql,sqlArgs) # stored procedure, no arguments
-			row = cursor.fetchone() # get the single result
+			row = cursor.fetchall() # get the single result
 			if row is None:
 				abort(404)
 		except:
@@ -318,7 +325,7 @@ class Pet(Resource):
 		finally:
 			cursor.close()
 			dbConnection.close()
-		return make_response(jsonify({"pet": row}), 200) # successful
+		return make_response(jsonify({"pets": row}), 200) # successful
 
 	# DELETE: Delete identified school resource
 	#
@@ -561,4 +568,4 @@ api.add_resource(Posts, '/pets/<int:petId>/posts')
 if __name__ == "__main__":
 #    app.run(host="cs3103.cs.unb.ca", port=xxxx, debug=True)
 	context = ('cert.pem', 'key.pem')
-	app.run(host=settings.APP_HOST, port=settings.APP_PORT, ssl_context = context, debug=settings.APP_DEBUG)ings.APP_DEBUG)
+	app.run(host=settings.APP_HOST, port=settings.APP_PORT, ssl_context = context, debug=settings.APP_DEBUG)
