@@ -50,8 +50,7 @@ Vue.component('PetList', {
 })
 Vue.component('post', {
     props: ['url', 'title', 'description'],
-    template: '<span class="text-center"><h3> {{title}} </h3> <img v-bind:src="url" width="100%" height="40%"/><p>{{description}}</p></span>'
-
+    template: '<span class="text-center"><div class="imgClass"><h3 class="imgTitleClass"> {{title}} </h3> <img v-bind:src="url" width="100%" height="40%"/><p>{{description}}</p></div></span>'
 });
 
 Vue.component('Post-List', {
@@ -122,7 +121,7 @@ Your Pets
                 <h2 v-on:click="petAddView()">
                     <i class="bi-plus-square "></i> Add
                 </h2>
-                <h2 v-on:click="petDeleteView()">
+                <h2 v-on:click="petList()">
                     <i class="bi-dash-square"></i> Remove
                 </h2>
             </div>
@@ -174,7 +173,7 @@ var vm = new Vue({
             password: ""
         },
         selectedPet: -1,
-	petSelected: false,
+    petSelected: false,
         selectedImage: {
             ImageFileExtension: "", 
             ImageFileName: "",
@@ -237,7 +236,7 @@ var vm = new Vue({
             </div>
           </section>
           <section v-if="profile">
-            <h1> Profile will be displayed here </h1>
+            <h1> Hello, you are user number {{loggedIn}} </h1>
           </section>
           <section v-if="petList">
             <div v-if="petsData != null" id="petsList">
@@ -247,7 +246,7 @@ var vm = new Vue({
                         <div v-for="pet in petsData">
                             <div class="list-of-pets" v-if="pet.UserId == loggedIn">
                                 {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
-                                <button type="button" v-on:click="goDeletePet(pet.PetId)" class="btn btn-outline-primary">Delete</button>
+                                <button type="button" v-on:click="goDeletePet(pet.PetId)" class="btnDel btn-outline-primary">Delete</button>
                             </div>
                         </div>
                     </ul>
@@ -272,42 +271,42 @@ var vm = new Vue({
             <h1> List of user posts will be displayed here </h1>
             </section>
             <section v-if="postForm">
-		<div v-if="petsData != null" id="petsList">
+        <div v-if="petsData != null" id="petsList">
                 <div v-if="userPets == true">
                     <h1> Your pets :  </h1>
                     <ul>
                         <div v-for="pet in petsData">
                             <div class="list-of-pets" v-if="pet.UserId == loggedIn">
                                 {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
-                                <button type="button" v-on:click="uploadForm(pet.PetId)" class="btn btn-outline-primary">Add Image</button>
+                                <button type="button" v-on:click="uploadForm(pet.PetId)" class="btnDel btn-outline-primary">Add Image</button>
                             </div>
                         </div>
                     </ul>
                 </div>
               </div>
             </section>
-	    <section v-if="petSelected">
+        <section v-if="petSelected">
                 <uploadPage></uploadPage>
-	    </section>
+        </section>
             <section v-if="addPet">
                 <div class="tay-form-style">
-  			 <form method="POST">
-    				<label for="petName">Pet Name</label>
-    				<input type="text" v-model="input.petname" class="form-control" placeholder="your pets name...">
+             <form method="POST">
+                    <label for="petName">Pet Name</label>
+                    <input type="text" v-model="input.petname" class="form-control" placeholder="your pets name...">
 
-    				<label for="age">Pet Age</label>
-    				<input type="number" v-model="input.age" class="form-control" placeholder="your pets age (in human years)...">
+                    <label for="age">Pet Age</label>
+                    <input type="number" v-model="input.age" class="form-control" placeholder="your pets age (in human years)...">
     
-    				<label for="species">Pet Species</label>
-    				<input type="text" v-model="input.species" class="form-control" placeholder="your pets species...">
+                    <label for="species">Pet Species</label>
+                    <input type="text" v-model="input.species" class="form-control" placeholder="your pets species...">
     
-    				<label for="breed">Pet Breed</label>
-    				<input type="text" v-model="input.breed" class="form-control" placeholder="your pets breed...">
+                    <label for="breed">Pet Breed</label>
+                    <input type="text" v-model="input.breed" class="form-control" placeholder="your pets breed...">
     
   
-    				<button type="button" v-on:click="goAddPet(true)">Submit</button>
-  			</form>
-		</div>
+                    <button type="button" v-on:click="goAddPet(true)">Submit</button>
+            </form>
+        </div>
             </section>
             <section v-if="deletePet">
                 <h1> Your pet has been deleted. We will miss them dearly </h1>
@@ -412,7 +411,7 @@ var vm = new Vue({
           this.postForm = false;
           this.addPet = false;
           this.deletePet = false;
-	  this.petSelected = false;
+      this.petSelected = false;
       },
       goPetList(isUser, isPet) {
         this.home = false;
@@ -423,33 +422,33 @@ var vm = new Vue({
         this.addPet = false;
         this.deletePet = false;
         this.userPets = isUser;
-	this.petSelected = false;
+    this.petSelected = false;
 
-	if (isPet > -1){
+    if (isPet > -1){
 
-		axios
-        	.get(this.serviceURL+"/pets/" + isPet)
-        	.then(response =>  {
-            		this.petsData = response.data.pets;
-        	})
-        	.catch(e => {
-            		alert("Unable to retrieve your pet data");
-            		console.log(e);
-        	});
+        axios
+            .get(this.serviceURL+"/pets/" + isPet)
+            .then(response =>  {
+                    this.petsData = response.data.pets;
+            })
+            .catch(e => {
+                    alert("Unable to retrieve your pet data");
+                    console.log(e);
+            });
 
-	}
-	else {
+    }
+    else {
 
-        	axios
-        	.get(this.serviceURL+"/pets")
-        	.then(response =>  {
-            	this.petsData = response.data.pets;
-        	})
-        	.catch(e => {
-            	alert("Unable to retrieve your pet data");
-            	console.log(e);
-        	});
-	}
+            axios
+            .get(this.serviceURL+"/pets")
+            .then(response =>  {
+                this.petsData = response.data.pets;
+            })
+            .catch(e => {
+                alert("Unable to retrieve your pet data");
+                console.log(e);
+            });
+    }
       },
       goUserPosts() {
         this.home = false;
@@ -460,7 +459,7 @@ var vm = new Vue({
         this.postForm = false;
         this.addPet = false;
         this.deletePet = false;
-	this.petSelected = false;
+    this.petSelected = false;
       },
       goPostForm() {
         this.home = false;
@@ -471,55 +470,55 @@ var vm = new Vue({
         this.postForm = true;
         this.addPet = false;
         this.deletePet = false;
-	this.petSelected = false;
+    this.petSelected = false;
 
-	axios
+    axios
         .get(this.serviceURL+"/pets")
         .then(response =>  {
-         	this.petsData = response.data.pets;
+            this.petsData = response.data.pets;
         })
         .catch(e => {
-        	alert("Unable to retrieve your pet data, therefore cannot create an associated post.");
-            	console.log(e);
+            alert("Unable to retrieve your pet data, therefore cannot create an associated post.");
+                console.log(e);
         });
 
       },
       goAddPet(isPetBeingAdded) {
-	
-	if (isPetBeingAdded){
+    
+    if (isPetBeingAdded){
 
-		axios
-		.post(this.serviceURL+"/pets", {"PetSpecies": this.input.species, "PetBreed": this.input.breed, "PetName": this.input.petname, "PetAge": this.input.age, "UserId": this.loggedIn})
-		.then(response => {
-			if (response.data.status == "success"){
+        axios
+        .post(this.serviceURL+"/pets", {"PetSpecies": this.input.species, "PetBreed": this.input.breed, "PetName": this.input.petname, "PetAge": this.input.age, "UserId": this.loggedIn})
+        .then(response => {
+            if (response.data.status == "success"){
 
-				this.goPetList(true, response.data.pet_id);
-			}
-		})
-		.catch(e => {
-			alert("Unable to add the new pet");
-          		console.log(e);
-        	});
-	}
-	else {
+                this.goPetList(true, response.data.pet_id);
+            }
+        })
+        .catch(e => {
+            alert("Unable to add the new pet");
+                console.log(e);
+            });
+    }
+    else {
 
-        	this.home = false;
-        	this.profile = false;
-        	this.petList = false;
-        	this.userPets = false;
-        	this.userPosts = false;
-        	this.postForm = false;
-        	this.addPet = true;
-        	this.deletePet = false;
-	        this.petSelected = false;
-	}
+            this.home = false;
+            this.profile = false;
+            this.petList = false;
+            this.userPets = false;
+            this.userPosts = false;
+            this.postForm = false;
+            this.addPet = true;
+            this.deletePet = false;
+            this.petSelected = false;
+    }
       },
       goDeletePet(delpet) {
         axios
         .delete(this.serviceURL+"/pets/"+delpet)
         .then(response =>  {
             this.petsData = response.data.pets;
-	    this.home = false;
+        this.home = false;
             this.profile = false;
             this.petList = false;
             this.userPets = false;
@@ -527,7 +526,7 @@ var vm = new Vue({
             this.postForm = false;
             this.addPet = false;
             this.deletePet = true;
-	    this.petSelected = false;
+        this.petSelected = false;
         })
         .catch(e => {
             alert("Unable to retrieve your pet data");
@@ -536,11 +535,11 @@ var vm = new Vue({
       },
       uploadForm(pet) {
 
-      	if (pet > -1) {
+        if (pet > -1) {
 
-	    this.selectedPet = pet;
-	    this.petSelected = true;
-	    this.home = false;
+        this.selectedPet = pet;
+        this.petSelected = true;
+        this.home = false;
             this.profile = false;
             this.petList = false;
             this.userPets = false;
@@ -549,11 +548,11 @@ var vm = new Vue({
             this.addPet = false;
             this.deletePet = false;
 
-	}
+    }
 
       },
       uploadImage(form) {
-	    axios.post(this.serviceURL + "/pets/1/images" , {
+        axios.post(this.serviceURL + "/pets/1/images" , {
                 "ImageTitle" : this.input.title,
                 "ImageFileName" : this.input.title
             })
