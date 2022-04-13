@@ -186,7 +186,7 @@ class Pets(Resource):
 				settings.DB_HOST,
 				settings.DB_USER,
 				settings.DB_PASSWD,
-				settings.DB_DB,
+				settings.DB_DATABASE,
 				charset='utf8mb4',
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'getPets'
@@ -215,7 +215,7 @@ class Pets(Resource):
 				charset='utf8mb4',
 				cursorclass= pymysql.cursors.DictCursor)
 			sql = 'getPetsByUser'
-			sqlArgs = (userId)
+			sqlArgs = (userId,)
 			cursor = dbConnection.cursor()
 			cursor.callproc(sql, sqlArgs) # stored procedure, no arguments
 			rows = cursor.fetchall() # get all the results
