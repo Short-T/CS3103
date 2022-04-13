@@ -173,12 +173,8 @@ var vm = new Vue({
             username: "",
             password: ""
         },
-        selectedPet: {
-            petSpecies: "",
-            petBreed: "",
-            petName: "",
-            petAge: ""
-        },
+        selectedPet: -1,
+	petSelected: false,
         selectedImage: {
             ImageFileExtension: "", 
             ImageFileName: "",
@@ -251,6 +247,7 @@ var vm = new Vue({
                         <div v-for="pet in petsData">
                             <div class="list-of-pets" v-if="pet.UserId == loggedIn">
                                 {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+                                <button type="button" v-on:click="goDeletePet(pet.PetId)" class="btn btn-outline-primary">Delete</button>
                             </div>
                         </div>
                     </ul>
@@ -275,8 +272,23 @@ var vm = new Vue({
             <h1> List of user posts will be displayed here </h1>
             </section>
             <section v-if="postForm">
-                <uploadPage></uploadPage>
+		<div v-if="petsData != null" id="petsList">
+                <div v-if="userPets == true">
+                    <h1> Your pets :  </h1>
+                    <ul>
+                        <div v-for="pet in petsData">
+                            <div class="list-of-pets" v-if="pet.UserId == loggedIn">
+                                {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+                                <button type="button" v-on:click="uploadForm(pet.PetId)" class="btn btn-outline-primary">Add Image</button>
+                            </div>
+                        </div>
+                    </ul>
+                </div>
+              </div>
             </section>
+	    <section v-if="petSelected">
+                <uploadPage></uploadPage>
+	    </section>
             <section v-if="addPet">
                 <div class="tay-form-style">
   			 <form method="POST">
@@ -298,7 +310,7 @@ var vm = new Vue({
 		</div>
             </section>
             <section v-if="deletePet">
-                <h1> Form to delete pet will be displayed here </h1>
+                <h1> Your pet has been deleted. We will miss them dearly </h1>
             </section>
           </section>
        </section>
@@ -389,6 +401,7 @@ var vm = new Vue({
           this.postForm = false;
           this.addPet = false;
           this.deletePet = false;
+          this.petSelected = false;
       },
       goProfile() {
           this.home = false;
@@ -399,6 +412,7 @@ var vm = new Vue({
           this.postForm = false;
           this.addPet = false;
           this.deletePet = false;
+	  this.petSelected = false;
       },
       goPetList(isUser, isPet) {
         this.home = false;
@@ -409,6 +423,7 @@ var vm = new Vue({
         this.addPet = false;
         this.deletePet = false;
         this.userPets = isUser;
+	this.petSelected = false;
 
 	if (isPet > -1){
 
@@ -445,16 +460,29 @@ var vm = new Vue({
         this.postForm = false;
         this.addPet = false;
         this.deletePet = false;
+	this.petSelected = false;
       },
       goPostForm() {
         this.home = false;
         this.profile = false;
         this.petList = false;
-        this.userPets = false;
+        this.userPets = true;
         this.userPosts = false;
         this.postForm = true;
         this.addPet = false;
         this.deletePet = false;
+	this.petSelected = false;
+
+	axios
+        .get(this.serviceURL+"/pets")
+        .then(response =>  {
+         	this.petsData = response.data.pets;
+        })
+        .catch(e => {
+        	alert("Unable to retrieve your pet data, therefore cannot create an associated post.");
+            	console.log(e);
+        });
+
       },
       goAddPet(isPetBeingAdded) {
 	
@@ -483,17 +511,46 @@ var vm = new Vue({
         	this.postForm = false;
         	this.addPet = true;
         	this.deletePet = false;
+	        this.petSelected = false;
 	}
       },
-      goDeletePet() {
-        this.home = false;
-        this.profile = false;
-        this.petList = false;
-        this.userPets = false;
-        this.userPosts = false;
-        this.postForm = false;
-        this.addPet = false;
-        this.deletePet = true;
+      goDeletePet(delpet) {
+        axios
+        .delete(this.serviceURL+"/pets/"+delpet)
+        .then(response =>  {
+            this.petsData = response.data.pets;
+	    this.home = false;
+            this.profile = false;
+            this.petList = false;
+            this.userPets = false;
+            this.userPosts = false;
+            this.postForm = false;
+            this.addPet = false;
+            this.deletePet = true;
+	    this.petSelected = false;
+        })
+        .catch(e => {
+            alert("Unable to retrieve your pet data");
+            console.log(e);
+        });
+      },
+      uploadForm(pet) {
+
+      	if (pet > -1) {
+
+	    this.selectedPet = pet;
+	    this.petSelected = true;
+	    this.home = false;
+            this.profile = false;
+            this.petList = false;
+            this.userPets = false;
+            this.userPosts = false;
+            this.postForm = false;
+            this.addPet = false;
+            this.deletePet = false;
+
+	}
+
       },
       uploadImage(form) {
 	    axios.post(this.serviceURL + "/pets/1/images" , {
@@ -522,22 +579,4 @@ var vm = new Vue({
             });
             }
         },
-    /**fetchPets() {
-      axios
-      .get(this.serviceURL+"/pets")
-      .then(response =>  {
-            this.petsData = response.data.pets;
-      })
-      .catch(e => {
-        alert("Unable to retrieve your pet data");
-        console.log(e);
-      });
-    }*/
-        // postImage(form) {
-        //     uploadImage(form);
-        //     axios
-        //     .post(this.serviceURL+"/pets/<int:petId>/images", {
-
-        //     }
-        // }
 });
