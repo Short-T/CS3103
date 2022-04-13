@@ -239,9 +239,21 @@ var vm = new Vue({
           <section v-if="profile">
             <h1> Profile will be displayed here </h1>
           </section>
-          <section v-if="petList" >
-            <h1> List of pets will be displayed here </h1>
-            <PetList v-bind:loggedIn="loggedIn"></PetList>
+          <section v-if="petList">
+            <h1> List of pets *WILL* be displayed here </h1>
+            <div v-if="petsData != null" id="userPetsList">
+                <ul>
+                    <div v-for="pet in petsData">
+                        <div class="d-flex w-100 justify-content-between">
+                           {{pet.PetName}} the {{pet.PetBreed}} {{pet.PetSpecies}}, {{pet.PetAge}} years old
+                        </div>
+                    </div>
+                </ul>
+            </div>
+            <div v-else>
+                <h2> Pets could not be displayed </h2>
+                <button type="button" v-on:click="goPetList()" class="btn btn-outline-primary">Try again</button>
+            </div>
             </section>
             <section v-if="userPosts">
             <h1> List of user posts will be displayed here </h1>
@@ -251,7 +263,7 @@ var vm = new Vue({
             </section>
             <section v-if="addPet">
                 <div class="tay-form-style">
-  			<form action=TODO>
+  			       <form action=TODO>
     				<label for="petName">Pet Name</label>
     				<input type="text" v-model="textinput" class="form-control" placeholder="your pets name...">
 
@@ -306,41 +318,41 @@ var vm = new Vue({
         },
     methods: {
         login() {
-if (this.input.username != "" && this.input.password != "") {
-axios
-.post(this.serviceURL+"/signin", {
-    "username": this.input.username,
-    "password": this.input.password
-})
-.then(response => {
-    if (response.data.status == "success") {
-      this.authenticated = true;
-      this.loggedIn = response.data.user_id;
-    }
-})
-.catch(e => {
-    alert("The username or password was incorrect, try again");
-    this.input.password = "";
-    console.log(e);
-});
-} else {
-alert("A username and password must be present");
-}
-},
-logout() {
-    // alert("No magic on the server yet. You'll have to write the logout code there.");
-    axios
-    .delete(this.serviceURL+"/signin")
-    .then(response => {
-        this.authenticated = false;
-        this.loggedIn = null;
-        document.getElementById("form-group").reset()
+            if (this.input.username != "" && this.input.password != "") {
+            axios
+            .post(this.serviceURL+"/signin", {
+                "username": this.input.username,
+                "password": this.input.password
+            })
+            .then(response => {
+                if (response.data.status == "success") {
+                  this.authenticated = true;
+                  this.loggedIn = response.data.user_id;
+                }
+            })
+            .catch(e => {
+                alert("The username or password was incorrect, try again");
+                this.input.password = "";
+                console.log(e);
+            });
+            } else {
+            alert("A username and password must be present");
+            }
+        },
+        logout() {
+        // alert("No magic on the server yet. You'll have to write the logout code there.");
+            axios
+            .delete(this.serviceURL+"/signin")
+            .then(response => {
+                this.authenticated = false;
+                this.loggedIn = null;
+                document.getElementById("form-group").reset()
 
-    })
-    .catch(e => {
-    console.log(e);
-    });
-    },
+            })
+            .catch(e => {
+                console.log(e);
+            });
+        },
     fetchImages() {
         axios
         .get(this.serviceURL+"/pets/<int:petId>/images")
@@ -378,6 +390,15 @@ logout() {
         this.postForm = false;
         this.addPet = false;
         this.deletePet = false;
+        axios
+        .get(this.serviceURL+"/pets")
+        .then(response =>  {
+            this.petsData = response.data.pets;
+        })
+        .catch(e => {
+            alert("Unable to retrieve your pet data");
+            console.log(e);
+        });
       },
       goUserPosts() {
         this.home = false;
@@ -431,6 +452,17 @@ logout() {
             });
             }
         },
+    /**fetchPets() {
+      axios
+      .get(this.serviceURL+"/pets")
+      .then(response =>  {
+            this.petsData = response.data.pets;
+      })
+      .catch(e => {
+        alert("Unable to retrieve your pet data");
+        console.log(e);
+      });
+    }*/
         // postImage(form) {
         //     uploadImage(form);
         //     axios
